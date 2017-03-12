@@ -9,7 +9,7 @@ To Do:
 */
 
 
-import { Component } from '@angular/core';
+import { Component, NgZone } from '@angular/core';
 import { NavController,AlertController } from 'ionic-angular';
 import {BLE} from 'ionic-native';
 import { HornbillServicesPage} from '../hornbill-services/hornbill-services';
@@ -23,7 +23,7 @@ export class HomePage {
   //devices:{name:string,deviceID:string,rssi:string}[];
   devices = [];
 
-  constructor(public navCtrl: NavController, public alertCtrl: AlertController) {
+  constructor(public navCtrl: NavController, public alertCtrl: AlertController,private zone: NgZone) {
   this.devices = [];
 
   this.checkBluetooth();
@@ -65,7 +65,9 @@ export class HomePage {
         //this.devices.push = device;
         console.log(JSON.stringify(device));
         console.log(device.name);
-        this.devices.push(device);
+        this.zone.run(() => { //running inside the zone because otherwise the view is not updated
+        this.devices.push(device)
+      });
         //this.stopScanning();
     });
   }
