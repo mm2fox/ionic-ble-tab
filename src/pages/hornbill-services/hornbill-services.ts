@@ -20,8 +20,8 @@ export class HornbillServicesPage implements OnInit {
 
   deviceId:string="";
   deviceServices = [];
-  robo_Service_UUID = "00ff";
-  rgb_lights_Service_UUID = "00ee";
+  robo_Service_UUID = "fff0";
+  rgb_lights_Service_UUID = "180f";
 
   constructor(public navCtrl: NavController, public navParams: NavParams) {}
 
@@ -49,10 +49,10 @@ export class HornbillServicesPage implements OnInit {
     //Check the service id and call relevant functionality.
 
     console.log(serviceId);
-    if(serviceId === this.robo_Service_UUID){
+    if(serviceId == this.robo_Service_UUID){
       this.navCtrl.push(RoboPage, [serviceId, this.deviceId]);
     }
-    else if(serviceId = this.rgb_lights_Service_UUID){
+    else if(serviceId == this.rgb_lights_Service_UUID){
       this.navCtrl.push(LightsPage, [serviceId, this.deviceId]);
     }
     else{
