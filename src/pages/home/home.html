@@ -10,6 +10,14 @@
   <!--
   <button ion-button (click)="startScanning()">Start Scan </button>
 -->
+<ion-refresher (ionRefresh)="startScanning($event)">
+      <ion-refresher-content 
+          pullingIcon="arrow-dropdown"
+          pullingText="Pull to refresh"
+          refreshingSpinner="circles"
+          refreshingText="Refreshing...">
+      </ion-refresher-content>
+   </ion-refresher>
   <ion-card *ngFor="let device of devices" (click) = "selectDevice(device.id)" >
     <ion-card-header>
       <ion-icon name="bluetooth" item-left> </ion-icon>

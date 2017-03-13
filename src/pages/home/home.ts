@@ -35,7 +35,7 @@ export class HomePage {
     BLE.isEnabled().then(
       ()=>{
           console.log("Bluetooth is enabled on device");
-          this.startScanning();
+          this.startScanning(undefined);
       },
       ()=>{
           console.log("show message to user");
@@ -59,7 +59,8 @@ export class HomePage {
       confirm.present();
   }
 
-  startScanning(){
+  startScanning(refresher){
+    this.devices = [];
     console.log("Scanning Started");
     BLE.scan([],2).subscribe(device => {
         //this.devices.push = device;
@@ -70,6 +71,8 @@ export class HomePage {
       });
         //this.stopScanning();
     });
+    if(refresher != undefined)
+          refresher.complete();
   }
 
 

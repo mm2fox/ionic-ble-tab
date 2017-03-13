@@ -7,39 +7,31 @@
 <ion-header>
 
   <ion-navbar>
-    <ion-title>robo</ion-title>
+    <ion-title>transfer</ion-title>
   </ion-navbar>
 
 </ion-header>
-<!-- Robot Controls -->
+
 
 <ion-content padding>
-    <ion-grid>
-        <ion-card class ="ctrlPanel">
-          <ion-row style="text-align: center;">
-            <ion-col width-33 offset-33 (click)="moveRobo(1)">
-                   <ion-icon class= "roboCtl-move" name="arrow-dropup-circle" ></ion-icon>
-            </ion-col>
-          </ion-row>
-
-          <ion-row style="text-align: center;">
-            <ion-col width-33 (click)="moveRobo(2)">
-                 <ion-icon  class= "roboCtl-move"  name="arrow-dropleft-circle"></ion-icon>
-            </ion-col>
-            <ion-col width-33 (click)="moveRobo(3)">
-                 <ion-icon  class= "roboCtrl-stop" name="disc"></ion-icon>
-            </ion-col>
-            <ion-col width-33 (click)="moveRobo(4)">
-                 <ion-icon  class= "roboCtl-move"  name="arrow-dropright-circle"></ion-icon>
-            </ion-col>
-          </ion-row>
+  <ion-list>
+  <ion-item>
+    <ion-label color="primary">Send</ion-label>
+    <ion-input type="text" name="cli_input" placeholder="0000020104" required [(ngModel)]="cli"></ion-input>
+  </ion-item>
+  </ion-list>
+  <button ion-button (click)="sendHEX()">Send HEX</button>
+  <ion-item>
+    {{receiveList}}
+  </ion-item>
 
 
-          <ion-row style="text-align: center;">
-            <ion-col width-33 offset-33 (click)="moveRobo(5)">
-                 <ion-icon  class= "roboCtl-move"  name="arrow-dropdown-circle"></ion-icon>
-            </ion-col>
-          </ion-row>
-      </ion-card>
-    </ion-grid>
+  <ion-item>
+    {{sendList}}
+
+  </ion-item>
+
+
+
+    
 </ion-content>
