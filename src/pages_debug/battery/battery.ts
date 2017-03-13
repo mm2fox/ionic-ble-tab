@@ -1,18 +1,21 @@
 import { Component } from '@angular/core';
 import { NavController, NavParams } from 'ionic-angular';
 import {BLE} from 'ionic-native';
+
 /*
-  Generated class for the Lights page.
+  Generated class for the Robo page.
 
   See http://ionicframework.com/docs/v2/components/#navigation for more info on
   Ionic pages and navigation.
 */
 @Component({
-  selector: 'page-lights',
-  templateUrl: 'lights.html'
+  selector: 'page-battery',
+  templateUrl: 'battery.html'
 })
-export class LightsPage {
-batteryLevelUUID = "2a19";
+
+export class BatteryPage {
+
+  batteryLevelUUID = "2a19";
   batterylevel;
 
   constructor(public navCtrl: NavController, public navParams: NavParams) {}
@@ -28,7 +31,6 @@ batteryLevelUUID = "2a19";
         console.log("read battery successfuly"+battery);
         this.batterylevel = new Uint8Array(battery);
         this.batterylevel = this.batterylevel[0];
-        alert(this.batterylevel);
       },
       ()=>{
         alert("read battery error");
@@ -44,5 +46,6 @@ batteryLevelUUID = "2a19";
   stopNotifyBattery() {
     BLE.stopNotification(this.navParams.data[1], this.navParams.data[0], this.batteryLevelUUID);
   }
+
 
 }
