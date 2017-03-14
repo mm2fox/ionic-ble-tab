@@ -1,4 +1,4 @@
-import { Component, NgZone } from '@angular/core';
+import { Component, NgZone, OnInit } from '@angular/core';
 import { NavController, NavParams } from 'ionic-angular';
 import {BLE} from 'ionic-native';
 
@@ -13,7 +13,7 @@ import {BLE} from 'ionic-native';
   templateUrl: 'robo.html'
 })
 
-export class RoboPage {
+export class RoboPage implements OnInit {
 
   transferCha = "fff6";
   cli;
@@ -22,6 +22,9 @@ export class RoboPage {
 
   constructor(public navCtrl: NavController, public navParams: NavParams, private zone: NgZone) {
     this.cli = navParams.get('cli');
+  }
+  ngOnInit(){
+    this.startNotifyTrans();
   }
 
   ionViewDidLoad() {
@@ -33,7 +36,7 @@ export class RoboPage {
     BLE.write(this.navParams.data[1], this.navParams.data[0], this.transferCha, this.stringToBytes(this.hexCharCodeToStr(this.cli))).then(
       ()=>{
         this.zone.run(() => { //running inside the zone because otherwise the view is not updated
-          this.sendList.push("<p>"+this.strToHexCharCode(this.cli)+"</p>")
+          this.sendList.push(this.strToHexCharCode(this.hexCharCodeToStr(this.cli)))
       });
       },
       ()=>{
@@ -45,10 +48,9 @@ export class RoboPage {
   startNotifyTrans() {
     BLE.startNotification(this.navParams.data[1], this.navParams.data[0], this.transferCha).subscribe(
       data=>{
-        alert(data);
-        alert(this.strToHexCharCode(data));
+        
         this.zone.run(() => { //running inside the zone because otherwise the view is not updated
-          this.receiveList.push("<p>"+this.strToHexCharCode(data)+"</p>")
+          this.receiveList.push(this.strToHexCharCode(this.bytesToString(data)))
       });
       },
       ()=>{

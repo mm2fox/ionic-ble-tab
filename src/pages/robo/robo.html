@@ -21,17 +21,17 @@
   </ion-item>
   </ion-list>
   <button ion-button (click)="sendHEX()">Send HEX</button>
-  <ion-item>
-    {{receiveList}}
+  
+    <ion-item-divider color="light">Received</ion-item-divider>
+  <ion-item *ngFor ="let receive of receiveList">
+    {{receive}}
   </ion-item>
-
-
-  <ion-item>
-    {{sendList}}
-
+  
+  
+    <ion-item-divider color="light">Send</ion-item-divider>
+  <ion-item *ngFor="let send of sendList">
+    {{send}}
   </ion-item>
-
-
-
+  
     
 </ion-content>
