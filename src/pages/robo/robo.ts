@@ -81,7 +81,13 @@ strToHexCharCode(str) {
     var hexCharCode = [];
     hexCharCode.push("0x");    
     for(var i = 0; i < str.length; i++) {
-     hexCharCode.push((str.charCodeAt(i)).toString(16));
+      var singlechar = (str.charCodeAt(i)).toString(16);
+      if (singlechar.length = 1) {
+         hexCharCode.push("0"+singlechar);
+      }
+      else{
+         hexCharCode.push(singlechar);
+      }
     }
     return hexCharCode.join("");
    }
