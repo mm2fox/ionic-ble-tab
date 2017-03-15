@@ -23,7 +23,7 @@ export class TransferPage implements OnInit {
   transferService = 'fff0';
   transferCha = "fff6";
   payloadlen = 17;
-  telnetPacket = 'ffc18fffc20fffc23fffc27fffc01fffc1ffffe05fffc21';
+  telnetPacket = 'fffc18fffc20fffc23fffc27fffc01fffc1ffffe05fffc21';
   cli;
   cliList = [];
   receiveList = [];
@@ -45,8 +45,10 @@ export class TransferPage implements OnInit {
   }
 
   sendRaw(cli){
+    alert("send raw data: "+cli);
     BLE.write(this.navParams.data, this.transferService, this.transferCha, this.stringToBytes(this.hexCharCodeToStr(cli))).then(
       ()=>{
+        alert("write trans ok");
         this.zone.run(() => { //running inside the zone because otherwise the view is not updated
           this.sendList.push(this.strToHexCharCode(this.hexCharCodeToStr(cli)))
       });
@@ -58,9 +60,11 @@ export class TransferPage implements OnInit {
     );
   }
   sendPacket(str,type='get',item='SOCKSTATUS',hex=false){
+    alert("sendPacket: "+str+"type: "+type+"hex"+hex);
   let len = str.length;
   if (hex){
     len = str.length/2;
+    str = this.hexCharCodeToStr(str);
   }
   let dataNumber = Math.ceil(len/this.payloadlen);
   
@@ -74,7 +78,9 @@ export class TransferPage implements OnInit {
   this.sendRaw(startPacket);
   if (type != 'get') {
   for (let i = 0, l = dataNumber; i < l; i++) {
-    let dataPacket = '01' + this.numToHex(i,true)+str.substr(i*this.payloadlen,(i+1)*this.payloadlen);
+    alert("ready to send data"+dataNumber);
+    let dataPacket = '01' + this.numToHex(i,true)+this.strToHexCharCode(str.substr(i*this.payloadlen,(i+1)*this.payloadlen));
+    alert("data packet is "+dataPacket);
     this.sendRaw(dataPacket);
   }
   }
@@ -83,7 +89,8 @@ export class TransferPage implements OnInit {
   }
   sendCMD(cli=undefined){
     if (cli == undefined) {
-      cli = this.cli;
+      cli = this.cli+"\n";
+      alert("send input cli command"+cli);
     }
     this.sendPacket(cli,'cli');
   }
@@ -160,11 +167,11 @@ stringToBytes(string) {
 strToHexCharCode(str) {
     if(str === "")
      return "";
-    var hexCharCode = [];
+    let hexCharCode = [];
     //hexCharCode.push("0x");    
-    for(var i = 0; i < str.length; i++) {
-      var singlechar = (str.charCodeAt(i)).toString(16);
-      if (singlechar.length = 1) {
+    for(let i = 0; i < str.length; i++) {
+      let singlechar = (str.charCodeAt(i)).toString(16);
+      if (singlechar.length == 1) {
          hexCharCode.push("0"+singlechar);
       }
       else{
@@ -174,21 +181,21 @@ strToHexCharCode(str) {
     return hexCharCode.join("");
    }
 hexCharCodeToStr(hexCharCodeStr) {
-    var trimedStr = hexCharCodeStr.trim();
-    var rawStr = 
+    let trimedStr = hexCharCodeStr.trim();
+    let rawStr = 
       trimedStr.substr(0,2).toLowerCase() === "0x"
       ? 
       trimedStr.substr(2) 
       : 
       trimedStr;
-    var len = rawStr.length;
+    let len = rawStr.length;
     if(len % 2 !== 0) {
      alert("Illegal Format ASCII Code!");
         return "";
     }
-    var curCharCode;
-    var resultStr = [];
-    for(var i = 0; i < len;i = i + 2) {
+    let curCharCode;
+    let resultStr = [];
+    for(let i = 0; i < len;i = i + 2) {
      curCharCode = parseInt(rawStr.substr(i, 2), 16); // ASCII Code Value
      resultStr.push(String.fromCharCode(curCharCode));
     }
