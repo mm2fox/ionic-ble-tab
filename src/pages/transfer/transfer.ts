@@ -96,8 +96,20 @@ export class TransferPage implements OnInit {
   disconnectSocket(){
     this.sendPacket('00','set','SOCKSTATUS',true);
   }
+  discoverServices(){
+    console.log("trying to connect");
+    BLE.connect(this.deviceId).subscribe(peripheralData => {
+        console.log(peripheralData);
+        this.startNotifyTrans();
+      },
+      peripheralData => {
+        alert("Device not connected "+this.deviceId)
+        console.log('disconnected');
+      });
+  }
   startNotifyTrans() {
-    BLE.startNotification(this.navParams.data[1], this.navParams.data[0], this.transferCha).subscribe(
+    alert(this.deviceId+this.transferService);
+    BLE.startNotification(this.deviceId, this.transferService, this.transferCha).subscribe(
       data=>{
         
         this.zone.run(() => { //running inside the zone because otherwise the view is not updated
@@ -111,7 +123,7 @@ export class TransferPage implements OnInit {
     );
   }
   stopNotifyTrans() {
-    BLE.stopNotification(this.navParams.data[1], this.navParams.data[0], this.transferCha);
+    BLE.stopNotification(this.deviceId, this.navParams.data[0], this.transferCha);
   }
   numToHex(num,long = true){
     let hexnumber = num.toString(16);

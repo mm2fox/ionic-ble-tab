@@ -46,6 +46,7 @@ export class RoboPage implements OnInit {
     );
   }
   startNotifyTrans() {
+    alert(this.navParams.data[1]+this.navParams.data[0]);
     BLE.startNotification(this.navParams.data[1], this.navParams.data[0], this.transferCha).subscribe(
       data=>{
         

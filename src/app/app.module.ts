@@ -5,6 +5,7 @@ import { HomePage } from '../pages/home/home';
 import { HornbillServicesPage} from '../pages/hornbill-services/hornbill-services';
 import { RoboPage} from '../pages/robo/robo';
 import { LightsPage} from '../pages/lights/lights';
+import { TransferPage} from '../pages/transfer/transfer';
 
 
 
@@ -15,7 +16,8 @@ import { LightsPage} from '../pages/lights/lights';
     HomePage,
     HornbillServicesPage,
     RoboPage,
-    LightsPage
+    LightsPage,
+    TransferPage
   ],
   imports: [
     IonicModule.forRoot(MyApp)
@@ -26,7 +28,8 @@ import { LightsPage} from '../pages/lights/lights';
     HomePage,
     HornbillServicesPage,
     RoboPage,
-    LightsPage
+    LightsPage,
+    TransferPage
   ],
   providers: [{provide: ErrorHandler, useClass: IonicErrorHandler}]
 })
