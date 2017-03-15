@@ -20,19 +20,22 @@ export class TransferPage implements OnInit {
   itemTypeDecode = {'00':'DHCP','01':'IP','02':'GATEWAY','03':'SUBMASK','04':'SOCKSTATUS'};
   ip;
   socketStatus;
+  transferService = 'fff0';
   transferCha = "fff6";
   payloadlen = 17;
-  telnetPacket = 'fffe01';
+  telnetPacket = 'ffc18fffc20fffc23fffc27fffc01fffc1ffffe05fffc21';
   cli;
   cliList = [];
   receiveList = [];
   sendList = [];
+  deviceId;
 
   constructor(public navCtrl: NavController, public navParams: NavParams, private zone: NgZone) {
     this.cli = navParams.get('cli');
-    
   }
   ngOnInit(){
+    this.deviceId = this.navParams.data;
+    alert("transferpage deviceID:" + this.deviceId);
     this.startNotifyTrans();
     
   }
@@ -42,7 +45,7 @@ export class TransferPage implements OnInit {
   }
 
   sendRaw(cli){
-    BLE.write(this.navParams.data[1], this.navParams.data[0], this.transferCha, this.stringToBytes(this.hexCharCodeToStr(cli))).then(
+    BLE.write(this.navParams.data, this.transferService, this.transferCha, this.stringToBytes(this.hexCharCodeToStr(cli))).then(
       ()=>{
         this.zone.run(() => { //running inside the zone because otherwise the view is not updated
           this.sendList.push(this.strToHexCharCode(this.hexCharCodeToStr(cli)))

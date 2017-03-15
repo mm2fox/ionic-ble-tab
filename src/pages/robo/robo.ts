@@ -1,4 +1,3 @@
-import ByteBuffer = require("bytebuffer");
 import { Component, NgZone, OnInit } from '@angular/core';
 import { NavController, NavParams } from 'ionic-angular';
 import {BLE} from 'ionic-native';

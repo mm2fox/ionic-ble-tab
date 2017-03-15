@@ -12,7 +12,8 @@ To Do:
 import { Component, NgZone } from '@angular/core';
 import { NavController,AlertController } from 'ionic-angular';
 import {BLE} from 'ionic-native';
-import { HornbillServicesPage} from '../hornbill-services/hornbill-services';
+import { HornbillServicesPage } from '../hornbill-services/hornbill-services';
+import { TransferPage } from '../transfer/transfer';
 
 @Component({
   selector: 'page-home',
@@ -80,6 +81,13 @@ export class HomePage {
 
       console.log("device Selected" + deviceID);
       this.navCtrl.push(HornbillServicesPage, deviceID);
+
+  }
+
+  selectDeviceTransfer(deviceID:String){
+      alert("connect to device"+deviceID);
+      console.log("device Selected for transfer data" + deviceID);
+      this.navCtrl.push(TransferPage, deviceID);
 
   }
 
