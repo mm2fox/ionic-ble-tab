@@ -42,14 +42,18 @@ export class TransferPage implements OnInit {
   ionViewDidLoad() {
     console.log('ionViewDidLoad TransferPage');
   }
-
+timestamp() {
+    let currenttime = Date();
+    
+    return currenttime.toString().split(" ")[4];
+    }
   sendRaw(cli){
     //alert("send raw data: "+cli);
     BLE.write(this.navParams.data, this.transferService, this.transferCha, this.stringToBytes(this.hexCharCodeToStr(cli))).then(
       ()=>{
         //alert("write trans ok");
         this.zone.run(() => { //running inside the zone because otherwise the view is not updated
-          this.sendList.push(this.strToHexCharCode(this.hexCharCodeToStr(cli)))
+          this.sendList.push(this.timestamp()+' : '+this.strToHexCharCode(this.hexCharCodeToStr(cli)))
       });
       },
       ()=>{
@@ -107,11 +111,18 @@ export class TransferPage implements OnInit {
     this.sendPacket('00','get','SOCKSTATUS',true);
   }
   changeBLEName() {
-    this.sendPacket(this.cli,'set','BLENAME');
+    let blename = this.cli;
+    if (blename ==undefined){
+      blename = "BLEDongleTest_V100";
+    }
+    this.sendPacket(blename,'set','BLENAME');
   }
 
   changeIP(){
     let ip = this.cli;
+    if (ip == undefined){
+      ip = "172.16.0.200/255.255.255.0"
+    }
     let ipgroup = ip.split("/");
     ip = ipgroup[0];
     let mask = ipgroup[1];
@@ -124,12 +135,16 @@ export class TransferPage implements OnInit {
     this.sendPacket(iphex+maskhex,'set','IP',true);
   }
   changeTargetIP(){
+    
     let targetip = this.cli;
+    if (targetip == undefined){
+      targetip = "172.16.0.2/5000";
+    }
     let targetipgroup = targetip.split("/");
     let targetiphex = this.ipToHex(targetipgroup[0]);
-    let porthex = '17';//default port 23
+    let porthex = '0017';//default port 23
     if (targetipgroup[1]!=undefined){
-      porthex = this.numToHex(targetipgroup[1]);
+      porthex = this.numToHex(targetipgroup[1],true);
     }
     this.sendPacket(targetiphex+porthex,'set','TARGETIP',true);
 
@@ -159,7 +174,7 @@ export class TransferPage implements OnInit {
       data=>{
         
         this.zone.run(() => { //running inside the zone because otherwise the view is not updated
-          this.receiveList.push(this.strToHexCharCode(this.bytesToString(data)))
+          this.receiveList.push(this.timestamp()+' : '+this.strToHexCharCode(this.bytesToString(data)))
       });
       },
       ()=>{
@@ -174,13 +189,13 @@ export class TransferPage implements OnInit {
   ipToHex(ip){
     let ipsegments = ip.split(".");
     let iphex = [];
-    for (let ipsegment in ipsegments) {
-      iphex.push(this.numToHex(ipsegment));
+    for (let i=0;i<ipsegments.length;i++) {
+      iphex.push(this.numToHex(ipsegments[i]));
     }
-    return iphex.join();
+    return iphex.join("");
   }
-  numToHex(num,long = true){
-    let hexnumber = num.toString(16);
+  numToHex(num,long = false){
+    let hexnumber = parseInt(num).toString(16);
     let len = hexnumber.length;
     if (long){
       hexnumber = '0000' + hexnumber;
