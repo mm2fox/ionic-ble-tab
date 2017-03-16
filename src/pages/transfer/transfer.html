@@ -15,12 +15,26 @@
 
 <ion-content padding>
   <ion-list>
+  <button ion-button small (click)="connectSocket()">Socket Connect</button>
+  <button ion-button small (click)="disconnectSocket()">Socket Disconnect</button>
+  <button ion-button small (click)="socketStatus()">Socket Status</button>
+  <button ion-button small (click)="sendTelnet()">Send Telnet Packet</button>
+
+  
+
   <ion-item>
     <ion-label color="primary">Send</ion-label>
-    <ion-input type="text" name="cli_input" placeholder="cli command here" required [(ngModel)]="cli"></ion-input>
+    <ion-input type="text" name="cli_input" placeholder="cli command/BLE name/IP here" required [(ngModel)]="cli"></ion-input>
   </ion-item>
   </ion-list>
   <button ion-button (click)="sendCMD()">Send CLI Command</button>
+  <button ion-button (click)="changeBLEName()">Change BLE Name</button>
+  <button ion-button (click)="changeIP()">Change IP address</button>
+  <button ion-button (click)="changeTargetIP()">Change Target IP address</button>
+  <button ion-button (click)="getIP()">Get IP address</button>
+  <button ion-button (click)="getTargetIP()">Get Target IP address</button>
+  
+
   
     <ion-item-divider color="light">Received</ion-item-divider>
   <ion-item *ngFor ="let receive of receiveList">

@@ -15,11 +15,10 @@ import {BLE} from 'ionic-native';
 
 export class TransferPage implements OnInit {
   packetTypeEncode = {set:'00',get:'01',cli:'02',response:'03',response_cli:'04',cli_length:'05',response_cli_length:'06'};
-  itemTypeEncode = {DHCP:'00',IP:'01',GATEWAY:'02',SUBMASK:'03',SOCKSTATUS:'04'};
+  itemTypeEncode = {DHCP:'00',IP:'01',GATEWAY:'02',TARGETIP:'03',SOCKSTATUS:'04',BLENAME:'05'};
   packetTypeDecode = {'00':'set','01':'get','02':'cli','03':'response','04':'response_cli','05':'cli_length','06':'response_cli_length'};
-  itemTypeDecode = {'00':'DHCP','01':'IP','02':'GATEWAY','03':'SUBMASK','04':'SOCKSTATUS'};
+  itemTypeDecode = {'00':'DHCP','01':'IP','02':'GATEWAY','03':'TARGETIP','04':'SOCKSTATUS','06':'BLENAME'};
   ip;
-  socketStatus;
   transferService = 'fff0';
   transferCha = "fff6";
   payloadlen = 17;
@@ -35,7 +34,7 @@ export class TransferPage implements OnInit {
   }
   ngOnInit(){
     this.deviceId = this.navParams.data;
-    alert("transferpage deviceID:" + this.deviceId);
+    //alert("transferpage deviceID:" + this.deviceId);
     this.startNotifyTrans();
     
   }
@@ -45,10 +44,10 @@ export class TransferPage implements OnInit {
   }
 
   sendRaw(cli){
-    alert("send raw data: "+cli);
+    //alert("send raw data: "+cli);
     BLE.write(this.navParams.data, this.transferService, this.transferCha, this.stringToBytes(this.hexCharCodeToStr(cli))).then(
       ()=>{
-        alert("write trans ok");
+        //alert("write trans ok");
         this.zone.run(() => { //running inside the zone because otherwise the view is not updated
           this.sendList.push(this.strToHexCharCode(this.hexCharCodeToStr(cli)))
       });
@@ -60,7 +59,7 @@ export class TransferPage implements OnInit {
     );
   }
   sendPacket(str,type='get',item='SOCKSTATUS',hex=false){
-    alert("sendPacket: "+str+"type: "+type+"hex"+hex);
+    //alert("sendPacket: "+str+"type: "+type+"hex"+hex);
   let len = str.length;
   if (hex){
     len = str.length/2;
@@ -74,13 +73,14 @@ export class TransferPage implements OnInit {
   if (type == 'get') {
     totalNumber = 2;
     startPacket = '00' + this.numToHex(totalNumber,true) +this.packetTypeEncode[type]+this.itemTypeEncode[item];
+    endPacket = '020000';
   }
   this.sendRaw(startPacket);
   if (type != 'get') {
   for (let i = 0, l = dataNumber; i < l; i++) {
-    alert("ready to send data"+dataNumber);
+    //alert("ready to send data"+dataNumber);
     let dataPacket = '01' + this.numToHex(i,true)+this.strToHexCharCode(str.substr(i*this.payloadlen,(i+1)*this.payloadlen));
-    alert("data packet is "+dataPacket);
+    //alert("data packet is "+dataPacket);
     this.sendRaw(dataPacket);
   }
   }
@@ -90,7 +90,7 @@ export class TransferPage implements OnInit {
   sendCMD(cli=undefined){
     if (cli == undefined) {
       cli = this.cli+"\n";
-      alert("send input cli command"+cli);
+      //alert("send input cli command"+cli);
     }
     this.sendPacket(cli,'cli');
   }
@@ -102,6 +102,45 @@ export class TransferPage implements OnInit {
   }
   disconnectSocket(){
     this.sendPacket('00','set','SOCKSTATUS',true);
+  }
+  socketStatus() {
+    this.sendPacket('00','get','SOCKSTATUS',true);
+  }
+  changeBLEName() {
+    this.sendPacket(this.cli,'set','BLENAME');
+  }
+
+  changeIP(){
+    let ip = this.cli;
+    let ipgroup = ip.split("/");
+    ip = ipgroup[0];
+    let mask = ipgroup[1];
+    
+    let maskhex = 'FFFFFF00';
+    if (mask != undefined) {
+      maskhex = this.ipToHex(mask);
+    }
+    let iphex = this.ipToHex(ip);
+    this.sendPacket(iphex+maskhex,'set','IP',true);
+  }
+  changeTargetIP(){
+    let targetip = this.cli;
+    let targetipgroup = targetip.split("/");
+    let targetiphex = this.ipToHex(targetipgroup[0]);
+    let porthex = '17';//default port 23
+    if (targetipgroup[1]!=undefined){
+      porthex = this.numToHex(targetipgroup[1]);
+    }
+    this.sendPacket(targetiphex+porthex,'set','TARGETIP',true);
+
+  }
+  getIP(){
+    this.sendPacket('00','get','IP',true);
+
+  }
+  getTargetIP(){
+    this.sendPacket('00','get','TARGETIP',true);
+
   }
   discoverServices(){
     console.log("trying to connect");
@@ -115,7 +154,7 @@ export class TransferPage implements OnInit {
       });
   }
   startNotifyTrans() {
-    alert(this.deviceId+this.transferService);
+    //alert(this.deviceId+this.transferService);
     BLE.startNotification(this.deviceId, this.transferService, this.transferCha).subscribe(
       data=>{
         
@@ -130,7 +169,15 @@ export class TransferPage implements OnInit {
     );
   }
   stopNotifyTrans() {
-    BLE.stopNotification(this.deviceId, this.navParams.data[0], this.transferCha);
+    BLE.stopNotification(this.deviceId, this.transferService, this.transferCha);
+  }
+  ipToHex(ip){
+    let ipsegments = ip.split(".");
+    let iphex = [];
+    for (let ipsegment in ipsegments) {
+      iphex.push(this.numToHex(ipsegment));
+    }
+    return iphex.join();
   }
   numToHex(num,long = true){
     let hexnumber = num.toString(16);
