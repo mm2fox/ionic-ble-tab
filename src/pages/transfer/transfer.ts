@@ -43,9 +43,8 @@ export class TransferPage implements OnInit {
     console.log('ionViewDidLoad TransferPage');
   }
 timestamp() {
-    let currenttime = Date();
-    
-    return currenttime.toString().split(" ")[4];
+    let currenttime = new Date();
+    return currenttime.toString().split(" ")[4]+"."+currenttime.getMilliseconds();
     }
   sendRaw(cli){
     //alert("send raw data: "+cli);
