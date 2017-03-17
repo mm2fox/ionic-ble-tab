@@ -49,10 +49,10 @@ export class HornbillServicesPage implements OnInit {
     //Check the service id and call relevant functionality.
 
     console.log(serviceId);
-    if(serviceId == this.robo_Service_UUID){
+    if(serviceId.toLowerCase() == this.robo_Service_UUID){
       this.navCtrl.push(RoboPage, [serviceId, this.deviceId]);
     }
-    else if(serviceId == this.rgb_lights_Service_UUID){
+    else if(serviceId.toLowerCase() == this.rgb_lights_Service_UUID){
       this.navCtrl.push(LightsPage, [serviceId, this.deviceId]);
     }
     else{
