@@ -15,25 +15,58 @@
 
 <ion-content padding>
   <ion-list>
+    <ion-list-header>
+    Socket
+  </ion-list-header>
+
   <button ion-button small (click)="connectSocket()">Socket Connect</button>
   <button ion-button small (click)="disconnectSocket()">Socket Disconnect</button>
   <button ion-button small (click)="socketStatus()">Socket Status</button>
+  <button ion-button small (click)="sendCMD('logout\n')">Send Logout</button>
+  <ion-list-header>
+    Login
+  </ion-list-header>
   <button ion-button small (click)="sendTelnet()">Send Telnet Packet</button>
-
+  <button ion-button small (click)="sendCMD('cli\n')">Send cli</button>
+  <button ion-button small (click)="sendCMD('admin\n')">Send admin</button>
+  <button ion-button small (click)="sendCMD('y\n')">Send y</button>
+<ion-list-header>
+    BLE Test
+  </ion-list-header>
+  <button ion-button small (click)="getIP()">Get IP address</button>
+  <button ion-button small (click)="getTargetIP()">Get Target IP address</button>
+  <ion-label color="primary">Config</ion-label>
+  <button ion-button small (click)="changeBLEName()">Change BLE Name</button>
+  <button ion-button small (click)="changeIP()">Change IP address</button>
+  <button ion-button small (click)="changeTargetIP()">Change Target IP address</button>
+  <button ion-button small (click)="changeTargetIP('172.16.0.1/23')">Reset Target IP</button>
   
-
+  <ion-list-header>
+    CLI
+  </ion-list-header>
   <ion-item>
     <ion-label color="primary">Send</ion-label>
     <ion-input type="text" name="cli_input" placeholder="cli command/BLE name/IP here" required [(ngModel)]="cli"></ion-input>
   </ion-item>
   </ion-list>
-  <button ion-button (click)="sendCMD()">Send CLI Command</button>
-  <button ion-button (click)="changeBLEName()">Change BLE Name</button>
-  <button ion-button (click)="changeIP()">Change IP address</button>
-  <button ion-button (click)="changeTargetIP()">Change Target IP address</button>
-  <button ion-button (click)="getIP()">Get IP address</button>
-  <button ion-button (click)="getTargetIP()">Get Target IP address</button>
-  
+  <button ion-button small (click)="sendCMD()">Send CLI Command</button>
+  <button ion-button small (click)="sendCMD('show slot *\n')">Show slot *</button>
+  <button ion-button small (click)="sendCMD('show condition\n')">Show condition</button>
+  <button ion-button small (click)="sendCMD('show log general\n')">Show log general</button>
+
+
+  <ion-list-header>
+    Result
+  </ion-list-header>
+  <ion-label>{{result}}</ion-label>
+
+  <button ion-button small (click)="clearResult()">Clear Result</button>
+
+  <button ion-button small (click)="startRecord()">{{recordButton}}</button>
+
+  <button ion-button small (click)="sendCMDPageing()">{{pagingButton}}</button>
+
+
 
   
     <ion-item-divider color="light">Received</ion-item-divider>

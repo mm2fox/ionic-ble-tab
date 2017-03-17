@@ -27,7 +27,17 @@ export class TransferPage implements OnInit {
   cliList = [];
   receiveList = [];
   sendList = [];
+
   deviceId;
+  result = '';
+  recordButton = 'Start Record';
+  pagingButton = 'Disable Paging';
+  recordStarted = false;
+  lastrecordStatus = false;
+  recordPacketesNum;
+  recordPacketesLength;
+  lastReceiveTime;
+  firstReceiveTime;
 
   constructor(public navCtrl: NavController, public navParams: NavParams, private zone: NgZone) {
     this.cli = navParams.get('cli');
@@ -44,15 +54,17 @@ export class TransferPage implements OnInit {
   }
 timestamp() {
     let currenttime = new Date();
-    return currenttime.toString().split(" ")[4]+"."+currenttime.getMilliseconds();
+    return [currenttime.toString().split(" ")[4]+"."+currenttime.getMilliseconds(),currenttime.getTime()];
     }
   sendRaw(cli){
     //alert("send raw data: "+cli);
     BLE.write(this.navParams.data, this.transferService, this.transferCha, this.stringToBytes(this.hexCharCodeToStr(cli))).then(
       ()=>{
         //alert("write trans ok");
+        
         this.zone.run(() => { //running inside the zone because otherwise the view is not updated
-          this.sendList.push(this.timestamp()+' : '+this.strToHexCharCode(this.hexCharCodeToStr(cli)))
+          this.sendList.reverse().push(this.timestamp()[0]+' : '+this.strToHexCharCode(this.hexCharCodeToStr(cli)));
+          this.sendList.reverse()
       });
       },
       ()=>{
@@ -112,15 +124,20 @@ timestamp() {
   changeBLEName() {
     let blename = this.cli;
     if (blename ==undefined){
-      blename = "BLEDongleTest_V100";
+      let ms = new Date().getMilliseconds();
+      blename = "MAC_"+this.deviceId.substr(12,5)+"-"+ms.toString();
     }
     this.sendPacket(blename,'set','BLENAME');
+    this.result = blename;
   }
 
-  changeIP(){
+  changeIP(cli){
     let ip = this.cli;
     if (ip == undefined){
       ip = "172.16.0.200/255.255.255.0"
+      if (cli != undefined){
+        ip = cli;
+      }
     }
     let ipgroup = ip.split("/");
     ip = ipgroup[0];
@@ -132,12 +149,16 @@ timestamp() {
     }
     let iphex = this.ipToHex(ip);
     this.sendPacket(iphex+maskhex,'set','IP',true);
+    this.result = "change IP: "+ip + " HEX " + iphex+maskhex
   }
-  changeTargetIP(){
+  changeTargetIP(cli){
     
     let targetip = this.cli;
     if (targetip == undefined){
       targetip = "172.16.0.2/5000";
+      if (cli != undefined){
+        targetip = cli;
+      }
     }
     let targetipgroup = targetip.split("/");
     let targetiphex = this.ipToHex(targetipgroup[0]);
@@ -146,6 +167,7 @@ timestamp() {
       porthex = this.numToHex(targetipgroup[1],true);
     }
     this.sendPacket(targetiphex+porthex,'set','TARGETIP',true);
+    this.result = "change Target IP: "+ targetip + " HEX " +targetiphex+porthex;
 
   }
   getIP(){
@@ -171,10 +193,25 @@ timestamp() {
     //alert(this.deviceId+this.transferService);
     BLE.startNotification(this.deviceId, this.transferService, this.transferCha).subscribe(
       data=>{
+        let timestamp = this.timestamp();
+        let datalength = this.bytesToString(data).length;
         
-        this.zone.run(() => { //running inside the zone because otherwise the view is not updated
-          this.receiveList.push(this.timestamp()+' : '+this.strToHexCharCode(this.bytesToString(data)))
-      });
+          if (this.recordStarted){
+            this.recordPacketesNum = this.recordPacketesNum + 1;
+            this.recordPacketesLength = this.recordPacketesLength + datalength;
+            if (this.lastrecordStatus) {
+              this.lastReceiveTime = timestamp[1];
+            } else {
+              this.firstReceiveTime = timestamp[1];
+            }
+          } else {
+            this.zone.run(() => { //running inside the zone because otherwise the view is not updated
+          this.receiveList.reverse().push(timestamp[0]+' : '+this.strToHexCharCode(this.bytesToString(data)));
+          this.receiveList.reverse();
+        });
+          }
+          this.lastrecordStatus = this.recordStarted;
+      
       },
       ()=>{
         alert("start notify trans error");
@@ -184,6 +221,40 @@ timestamp() {
   }
   stopNotifyTrans() {
     BLE.stopNotification(this.deviceId, this.transferService, this.transferCha);
+  }
+  clearResult(){
+    this.sendList = [];
+    this.receiveList = [];
+    this.result = '';
+  }
+  startRecord(){
+    if (this.recordStarted){
+      this.recordButton = 'Start Record';
+      this.recordStarted = false;
+      let starttime = new Date(this.firstReceiveTime);
+      let endtime = new Date(this.lastReceiveTime);
+      let spendtime = (this.lastReceiveTime - this.firstReceiveTime)/1000;
+      alert("start time: "+starttime.toString()+" last time: "+endtime.toString()+"Packets: "+this.recordPacketesNum);
+      this.result ="Used Time: " + spendtime + "s, Packets length: "+this.recordPacketesLength+" Speed:"+this.recordPacketesLength/spendtime+'byte/s';
+      
+    } else {
+      this.recordButton = 'Stop Record';
+      this.recordStarted = true;
+      this.result = "Click Stop Record to get result, raw list will not update during capture";
+    }
+    this.recordPacketesNum = 0;
+    this.recordPacketesLength = 0;
+  }
+  sendCMDPageing(){
+    if (this.pagingButton == 'Enable Paging'){
+      this.pagingButton = 'Disable Paging';
+      this.sendCMD('paging status enabled\n');
+     } else {
+       this.pagingButton = 'Enable Paging';
+       this.sendCMD('paging status disabled\n');
+     }
+
+    
   }
   ipToHex(ip){
     let ipsegments = ip.split(".");

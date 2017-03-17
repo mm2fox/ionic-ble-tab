@@ -85,7 +85,7 @@ export class HomePage {
   }
 
   selectDeviceTransfer(deviceID:String){
-      alert("connect to device"+deviceID);
+      //alert("connect to device"+deviceID);
       console.log("device Selected for transfer data" + deviceID);
       this.navCtrl.push(TransferPage, deviceID);
 
