@@ -197,6 +197,9 @@ timestamp() {
         let datalength = this.bytesToString(data).length;
         
           if (this.recordStarted){
+            this.zone.run(() => { //running inside the zone because otherwise the view is not updated
+          this.result = this.strToHexCharCode(this.hexCharCodeToStr(data));
+      });
             this.recordPacketesNum = this.recordPacketesNum + 1;
             this.recordPacketesLength = this.recordPacketesLength + datalength;
             if (this.lastrecordStatus) {
