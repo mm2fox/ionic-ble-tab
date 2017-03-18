@@ -21,6 +21,8 @@ export class TransferPage implements OnInit {
   ip;
   transferService = 'fff0';
   transferCha = "fff6";
+  battService = '180f';
+  battLevelCha = '2a19';
   payloadlen = 17;
   telnetPacket = 'fffc18fffc20fffc23fffc27fffc01fffc1ffffe05fffc21';
   cli;
@@ -31,7 +33,12 @@ export class TransferPage implements OnInit {
   deviceId;
   result = '';
   recordButton = 'Start Record';
+  recordColor = 'default';
   pagingButton = 'Disable Paging';
+  notifyTransCharButton = 'Start Notify';
+  notifyBatteryButton = 'Start Notify Battery Level';
+  connectBLEButton = 'ConnectBLE';
+  BLEConnected = true;
   recordStarted = false;
   lastrecordStatus = false;
   recordPacketesNum;
@@ -44,9 +51,7 @@ export class TransferPage implements OnInit {
   }
   ngOnInit(){
     this.deviceId = this.navParams.data;
-    //alert("transferpage deviceID:" + this.deviceId);
-    this.startNotifyTrans();
-    
+    this.discoverServices();
   }
 
   ionViewDidLoad() {
@@ -178,28 +183,57 @@ timestamp() {
     this.sendPacket('00','get','TARGETIP',true);
 
   }
+  
+  notifyTrans(){
+    if (this.notifyTransCharButton == 'Start Notify') {
+      this.startNotifyTrans();
+    } else {
+      this.stopNotifyTrans();
+    }
+
+  }
+
+  notifyBattery(){
+    if (this.notifyBatteryButton == 'Start Notify Battery Level') {
+      this.startNotifyBatteryLevel()
+    }else{
+      this.stopNotifyBatteryLevel()
+    }
+  }
   discoverServices(){
     console.log("trying to connect");
     BLE.connect(this.deviceId).subscribe(peripheralData => {
         console.log(peripheralData);
+        this.BLEConnected = true;
+        this.connectBLEButton = 'DisconnectBLE';
         this.startNotifyTrans();
       },
       peripheralData => {
         alert("Device not connected "+this.deviceId)
         console.log('disconnected');
+        this.BLEConnected = false;
       });
   }
   startNotifyTrans() {
-    //alert(this.deviceId+this.transferService);
+    if (!this.BLEConnected){
+      alert("BLE not connected " + this.deviceId);
+      return
+    }
+    this.notifyTransCharButton = 'Stop Notify';
     BLE.startNotification(this.deviceId, this.transferService, this.transferCha).subscribe(
       data=>{
+        //this.notifyBatteryButton = 'Stop Notify';
         let timestamp = this.timestamp();
         let datalength = this.bytesToString(data).length;
         
           if (this.recordStarted){
-            this.zone.run(() => { //running inside the zone because otherwise the view is not updated
-          this.result = this.strToHexCharCode(this.hexCharCodeToStr(data));
-      });
+          this.result = 'Received Notification';
+          if (this.recordColor == 'light') {
+            this.recordColor = 'default';
+          } else {
+            this.recordColor = 'light';
+          }
+          
             this.recordPacketesNum = this.recordPacketesNum + 1;
             this.recordPacketesLength = this.recordPacketesLength + datalength;
             if (this.lastrecordStatus) {
@@ -218,12 +252,136 @@ timestamp() {
       },
       ()=>{
         alert("start notify trans error");
+        this.notifyTransCharButton = 'Start Notify';
         console.log("Error");
       }
     );
   }
   stopNotifyTrans() {
-    BLE.stopNotification(this.deviceId, this.transferService, this.transferCha);
+    if (!this.BLEConnected){
+      alert("BLE not connected " + this.deviceId);
+      return
+    }
+    BLE.stopNotification(this.deviceId, this.transferService, this.transferCha).then(
+      ()=>{
+        this.notifyTransCharButton = 'Start Notify';
+      },
+      ()=>{
+        alert("Stop Notify Failed "+this.deviceId);
+        this.notifyTransCharButton = 'Stop Notify';
+      }
+    );
+  }
+  startNotifyBatteryLevel() {
+    if (!this.BLEConnected){
+      alert("BLE not connected " + this.deviceId);
+      return
+    }
+    this.notifyBatteryButton = 'Stop Notify Battery Level';
+    BLE.startNotification(this.deviceId, this.transferService, this.transferCha).subscribe(
+      data=>{
+        let batteryLevelArry = new Uint8Array(data);
+        this.zone.run(() => {
+        this.result = "Battery Level is "+batteryLevelArry[0]+"%";
+        });
+      },
+      ()=>{
+        alert("Start Notify Battery Failed "+this.deviceId);
+        this.notifyBatteryButton = 'Start Notify Battery Level';
+      }
+    );
+  }
+  stopNotifyBatteryLevel() {
+    if (!this.BLEConnected){
+      alert("BLE not connected " + this.deviceId);
+      return
+    }
+    BLE.stopNotification(this.deviceId, this.battService, this.battLevelCha).then(
+      () => {
+        this.notifyBatteryButton = 'Start Notify Battery Level'
+      },
+      () => {
+        alert("Stop Notify Battery Failed "+this.deviceId);
+        this.notifyBatteryButton = 'Stop Notify Battery Level';
+      }
+    );
+    
+  }
+getBLEStatus(){
+  BLE.isConnected(this.deviceId).then(
+    status=>{
+      alert("BLE status is "+status);
+      this.connectBLEButton = 'DisconnectBLE';
+      this.BLEConnected = true;
+    },
+    (reason)=>{
+      alert("Failed to get BLE status "+reason);
+      this.connectBLEButton = 'ConnectBLE';
+      this.notifyBatteryButton = 'Start Notify Battery Level';
+      this.notifyTransCharButton = 'Start Notify';
+      this.BLEConnected = false;
+    }
+  )
+}
+  connectBLE() {
+    
+    if (this.connectBLEButton == 'ConnectBLE') {
+      BLE.connect(this.deviceId).subscribe(
+        () => {
+          alert("BLE connect successfully");
+          this.zone.run(()=>{
+          this.connectBLEButton = 'DisconnectBLE';
+          });
+          this.BLEConnected = true;
+        },
+        (error) => {
+          alert("Connect BLE failed "+JSON.stringify(error));
+          this.zone.run(()=>{
+              this.connectBLEButton = 'ConnectBLE';
+          });
+        this.BLEConnected = false;
+        
+        },
+        ()=>{
+          alert("BLE connect complete");
+        }
+
+      )
+
+    } else {
+      BLE.disconnect(this.deviceId).then(
+        (value)=>{
+          
+          alert("disconnect BLE "+JSON.stringify(value));
+          this.connectBLEButton = 'ConnectBLE';
+          this.notifyBatteryButton = 'Start Notify Battery Level';
+          this.notifyTransCharButton = 'Start Notify';
+          this.BLEConnected = false;
+        },
+        (reason)=>{
+          alert("Disconnect BLE failed "+reason);
+          //this.connectBLEButton = 'DisconnectBLE';
+          
+        }
+      )
+    }
+  }
+  readBatteryLevel(){
+    if (!this.BLEConnected){
+      alert("BLE not connected " + this.deviceId);
+      return
+    }
+    BLE.read(this.deviceId,this.battService,this.battLevelCha).then(
+      data => {
+        let batteryLevelArry = new Uint8Array(data);
+        this.result = "Battery Level is "+batteryLevelArry[0]+"% from read";
+        alert("Battery Level is "+batteryLevelArry[0]+"%");
+      },
+      reason => {
+        alert("Read battery level failed "+reason)
+      }
+
+    )
   }
   clearResult(){
     this.sendList = [];
@@ -259,6 +417,7 @@ timestamp() {
 
     
   }
+
   ipToHex(ip){
     let ipsegments = ip.split(".");
     let iphex = [];
