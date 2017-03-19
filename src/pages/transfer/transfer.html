@@ -15,6 +15,13 @@
 
 <ion-content padding>
   <ion-list>
+  <ion-list-header>
+    BLE {{deviceId}} connected is {{BLEConnected}}
+  </ion-list-header>
+  <button ion-button small (click)="connectBLE()">{{connectBLEButton}}</button>
+  <button ion-button small (click)="getBLEStatus()">BLE Status</button>
+  <button ion-button small (click)="notifyTrans()">{{notifyTransCharButton}}</button>
+  <button ion-button small (click)="notifyBattery()">{{notifyBatteryButton}}</button>
     <ion-list-header>
     Socket
   </ion-list-header>
@@ -31,11 +38,12 @@
   <button ion-button small (click)="sendCMD('admin\n')">Send admin</button>
   <button ion-button small (click)="sendCMD('y\n')">Send y</button>
 <ion-list-header>
-    BLE Test
+    BLE Function Test
   </ion-list-header>
   <button ion-button small (click)="getIP()">Get IP address</button>
   <button ion-button small (click)="getTargetIP()">Get Target IP address</button>
-  <ion-label color="primary">Config</ion-label>
+  <button ion-button small (click)="readBatteryLevel()">Read Battery Level</button>
+  <ion-label color="primary">Configuration</ion-label>
   <button ion-button small (click)="changeBLEName()">Change BLE Name</button>
   <button ion-button small (click)="changeIP()">Change IP address</button>
   <button ion-button small (click)="changeTargetIP()">Change Target IP address</button>
@@ -53,6 +61,7 @@
   <button ion-button small (click)="sendCMD('show slot *\n')">Show slot *</button>
   <button ion-button small (click)="sendCMD('show condition\n')">Show condition</button>
   <button ion-button small (click)="sendCMD('show log general\n')">Show log general</button>
+  <button ion-button small (click)="sendCMDPageing()">{{pagingButton}}</button>
 
 
   <ion-list-header>
@@ -60,11 +69,12 @@
   </ion-list-header>
   <ion-label>{{result}}</ion-label>
 
+  
+
+  <button ion-button small color={{recordColor}} (click)="startRecord()">{{recordButton}}</button>
   <button ion-button small (click)="clearResult()">Clear Result</button>
 
-  <button ion-button small (click)="startRecord()">{{recordButton}}</button>
-
-  <button ion-button small (click)="sendCMDPageing()">{{pagingButton}}</button>
+  
 
 
 

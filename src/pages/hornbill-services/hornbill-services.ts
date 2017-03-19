@@ -1,4 +1,4 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, NgZone } from '@angular/core';
 import { NavController, NavParams } from 'ionic-angular';
 import {BLE} from 'ionic-native';
 import { RoboPage } from '../robo/robo';
@@ -23,7 +23,7 @@ export class HornbillServicesPage implements OnInit {
   robo_Service_UUID = "fff0";
   rgb_lights_Service_UUID = "180f";
 
-  constructor(public navCtrl: NavController, public navParams: NavParams) {}
+  constructor(public navCtrl: NavController, public navParams: NavParams,private zone: NgZone) {}
 
   ngOnInit() {
     console.log('ionViewDidLoad HornbillServicesPage');
@@ -32,16 +32,21 @@ export class HornbillServicesPage implements OnInit {
     this.discoverServices();
   }
 
-  discoverServices(){
+  discoverServices(refresher=undefined){
     console.log("trying to connect");
     BLE.connect(this.deviceId).subscribe(peripheralData => {
         console.log(peripheralData);
+        this.zone.run(() => { //running inside the zone because otherwise the view is not updated
         this.deviceServices = peripheralData.services;
+      });
+        
         console.log(this.deviceServices);
       },
       peripheralData => {
         console.log('disconnected');
       });
+      if(refresher != undefined)
+          refresher.complete();
   }
 
   selectService(serviceId:String){
