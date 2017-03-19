@@ -16,7 +16,10 @@
 <ion-content padding>
   <ion-list>
   <ion-list-header>
-    BLE {{deviceId}} connected is {{BLEConnected}}
+    BLE Device {{deviceName}} ID {{deviceId}}
+  </ion-list-header>
+  <ion-list-header>
+    Connected is {{BLEConnected}}, Battery is {{batteryLevel}}%, Last Notify on {{notifyTransTimestamp}}
   </ion-list-header>
   <button ion-button small (click)="connectBLE()">{{connectBLEButton}}</button>
   <button ion-button small (click)="getBLEStatus()">BLE Status</button>
@@ -71,7 +74,7 @@
 
   
 
-  <button ion-button small color={{recordColor}} (click)="startRecord()">{{recordButton}}</button>
+  <button ion-button small (click)="startRecord()">{{recordButton}}</button>
   <button ion-button small (click)="clearResult()">Clear Result</button>
 
   
