@@ -38,7 +38,8 @@ export class HomePage {
           console.log("Bluetooth is enabled on device");
           this.startScanning(undefined);
       },
-      ()=>{
+      (reason)=>{
+          alert("Blue not enabled "+reason);
           console.log("show message to user");
           this.showConfirm();
       }
@@ -84,10 +85,10 @@ export class HomePage {
 
   }
 
-  selectDeviceTransfer(deviceID:String){
+  selectDeviceTransfer(device){
       //alert("connect to device"+deviceID);
-      console.log("device Selected for transfer data" + deviceID);
-      this.navCtrl.push(TransferPage, deviceID);
+      console.log("device Selected for transfer data" + device);
+      this.navCtrl.push(TransferPage, device);
 
   }
 

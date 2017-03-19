@@ -31,14 +31,17 @@ export class TransferPage implements OnInit {
   sendList = [];
 
   deviceId;
+  deviceName;
   result = '';
+  batteryLevel;
   recordButton = 'Start Record';
-  recordColor = 'default';
+  
   pagingButton = 'Disable Paging';
   notifyTransCharButton = 'Start Notify';
   notifyBatteryButton = 'Start Notify Battery Level';
   connectBLEButton = 'ConnectBLE';
   BLEConnected = true;
+  notifyTransTimestamp;
   recordStarted = false;
   lastrecordStatus = false;
   recordPacketesNum;
@@ -50,7 +53,8 @@ export class TransferPage implements OnInit {
     this.cli = navParams.get('cli');
   }
   ngOnInit(){
-    this.deviceId = this.navParams.data;
+    this.deviceId = this.navParams.data.id;
+    this.deviceName = this.navParams.data.name;
     this.discoverServices();
   }
 
@@ -63,7 +67,7 @@ timestamp() {
     }
   sendRaw(cli){
     //alert("send raw data: "+cli);
-    BLE.write(this.navParams.data, this.transferService, this.transferCha, this.stringToBytes(this.hexCharCodeToStr(cli))).then(
+    BLE.write(this.deviceId, this.transferService, this.transferCha, this.stringToBytes(this.hexCharCodeToStr(cli))).then(
       ()=>{
         //alert("write trans ok");
         
@@ -205,13 +209,19 @@ timestamp() {
     BLE.connect(this.deviceId).subscribe(peripheralData => {
         console.log(peripheralData);
         this.BLEConnected = true;
-        this.connectBLEButton = 'DisconnectBLE';
+        this.zone.run(
+          ()=>{
+            this.connectBLEButton = 'DisconnectBLE';
+          });
+        
         this.startNotifyTrans();
+        this.startNotifyBatteryLevel();
       },
       peripheralData => {
-        alert("Device not connected "+this.deviceId)
+        alert("Device not connected in discover"+this.deviceId)
         console.log('disconnected');
         this.BLEConnected = false;
+        this.connectBLEButton = 'ConnectBLE';
       });
   }
   startNotifyTrans() {
@@ -225,15 +235,11 @@ timestamp() {
         //this.notifyBatteryButton = 'Stop Notify';
         let timestamp = this.timestamp();
         let datalength = this.bytesToString(data).length;
-        
+        this.zone.run(() => {
+        this.notifyTransTimestamp = timestamp[0];
+        });
           if (this.recordStarted){
-          this.result = 'Received Notification';
-          if (this.recordColor == 'light') {
-            this.recordColor = 'default';
-          } else {
-            this.recordColor = 'light';
-          }
-          
+          //this.result = 'Received Notification on ' + timestamp[0];
             this.recordPacketesNum = this.recordPacketesNum + 1;
             this.recordPacketesLength = this.recordPacketesLength + datalength;
             if (this.lastrecordStatus) {
@@ -278,11 +284,12 @@ timestamp() {
       return
     }
     this.notifyBatteryButton = 'Stop Notify Battery Level';
-    BLE.startNotification(this.deviceId, this.transferService, this.transferCha).subscribe(
+    BLE.startNotification(this.deviceId, this.battService, this.battLevelCha).subscribe(
       data=>{
         let batteryLevelArry = new Uint8Array(data);
         this.zone.run(() => {
-        this.result = "Battery Level is "+batteryLevelArry[0]+"%";
+        //this.result = "Battery Level is "+batteryLevelArry[0]+"%, update on "+this.timestamp()[0];
+        this.batteryLevel = batteryLevelArry[0];
         });
       },
       ()=>{
@@ -310,7 +317,11 @@ timestamp() {
 getBLEStatus(){
   BLE.isConnected(this.deviceId).then(
     status=>{
-      alert("BLE status is "+status);
+      if (status){
+        alert("BLE status is "+status);
+      } else {
+        alert("BLE status is OK");
+      }
       this.connectBLEButton = 'DisconnectBLE';
       this.BLEConnected = true;
     },
@@ -374,7 +385,8 @@ getBLEStatus(){
     BLE.read(this.deviceId,this.battService,this.battLevelCha).then(
       data => {
         let batteryLevelArry = new Uint8Array(data);
-        this.result = "Battery Level is "+batteryLevelArry[0]+"% from read";
+        this.result = "Battery Level is "+batteryLevelArry[0]+"% from read, update on "+this.timestamp();
+        this.batteryLevel = batteryLevelArry[0];
         alert("Battery Level is "+batteryLevelArry[0]+"%");
       },
       reason => {
