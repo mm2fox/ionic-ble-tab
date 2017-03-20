@@ -63,6 +63,12 @@ export class TransferPage implements OnInit {
   ionViewDidLoad() {
     console.log('ionViewDidLoad TransferPage');
   }
+  ionViewWillLeave() {
+    if (this.BLEConnected) {
+      this.connectBLE()
+    }
+
+  }
 timestamp() {
     let currenttime = new Date();
     return [currenttime.toString().split(" ")[4]+"."+currenttime.getMilliseconds(),currenttime.getTime()];

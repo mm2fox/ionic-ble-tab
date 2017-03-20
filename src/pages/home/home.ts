@@ -37,7 +37,7 @@ export class HomePage {
   //check if bluetooth is enabled on the device.
   checkBluetooth(){
     
-    //if (this.plt.is('android')) {
+   
     BLE.isEnabled().then(
       ()=>{
           console.log("Bluetooth is enabled on device");
@@ -46,12 +46,12 @@ export class HomePage {
       (reason)=>{
           console.log("Blue not enabled "+reason);
           console.log("show message to user");
-          this.showConfirm();
+          if (this.plt.is('android')) {
+            this.showConfirm();
+          }
       }
     );
-  //} else {
-  //  this.startScanning(undefined);
-  //}
+  
   }
 
   showConfirm() {
