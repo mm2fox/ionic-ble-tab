@@ -19,7 +19,7 @@
     BLE Device {{deviceName}} ID {{deviceId}}
   </ion-list-header>
   <ion-list-header>
-    Connected is {{BLEConnected}}, Battery is {{batteryLevel}}%, Last Notify on {{notifyTransTimestamp}}
+    Connected is {{BLEConnected}},RSSI {{deviceRSSI}}, Battery is {{batteryLevel}}%
   </ion-list-header>
   <button ion-button small (click)="connectBLE()">{{connectBLEButton}}</button>
   <button ion-button small (click)="getBLEStatus()">BLE Status</button>
@@ -68,7 +68,7 @@
 
 
   <ion-list-header>
-    Result
+    Result Last Notify on {{notifyTransTimestamp}}
   </ion-list-header>
   <ion-label>{{result}}</ion-label>
 

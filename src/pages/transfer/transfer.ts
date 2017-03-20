@@ -32,6 +32,7 @@ export class TransferPage implements OnInit {
 
   deviceId;
   deviceName;
+  deviceRSSI;
   result = '';
   batteryLevel;
   recordButton = 'Start Record';
@@ -55,6 +56,7 @@ export class TransferPage implements OnInit {
   ngOnInit(){
     this.deviceId = this.navParams.data.id;
     this.deviceName = this.navParams.data.name;
+    this.deviceRSSI = this.navParams.data.rssi;
     this.discoverServices();
   }
 
@@ -132,7 +134,7 @@ timestamp() {
   }
   changeBLEName() {
     let blename = this.cli;
-    if (blename ==undefined){
+    if (blename == undefined || blename == ''){
       let ms = new Date().getMilliseconds();
       blename = "MAC_"+this.deviceId.substr(12,5)+"-"+ms.toString();
     }
@@ -142,7 +144,7 @@ timestamp() {
 
   changeIP(cli){
     let ip = this.cli;
-    if (ip == undefined){
+    if (ip == undefined||ip==''){
       ip = "172.16.0.200/255.255.255.0"
       if (cli != undefined){
         ip = cli;
@@ -163,7 +165,7 @@ timestamp() {
   changeTargetIP(cli){
     
     let targetip = this.cli;
-    if (targetip == undefined){
+    if (targetip == undefined || targetip == ''){
       targetip = "172.16.0.2/5000";
       if (cli != undefined){
         targetip = cli;
@@ -338,10 +340,12 @@ getBLEStatus(){
     
     if (this.connectBLEButton == 'ConnectBLE') {
       BLE.connect(this.deviceId).subscribe(
-        () => {
-          alert("BLE connect successfully");
+        (value) => {
+          alert("BLE connect successfully on "+value.name);
           this.zone.run(()=>{
           this.connectBLEButton = 'DisconnectBLE';
+          this.deviceName = value.name;
+          this.deviceRSSI = value.rssi;
           });
           this.BLEConnected = true;
         },
@@ -385,7 +389,7 @@ getBLEStatus(){
     BLE.read(this.deviceId,this.battService,this.battLevelCha).then(
       data => {
         let batteryLevelArry = new Uint8Array(data);
-        this.result = "Battery Level is "+batteryLevelArry[0]+"% from read, update on "+this.timestamp();
+        this.result = "Battery Level is "+batteryLevelArry[0]+"% update on "+this.timestamp()[0];
         this.batteryLevel = batteryLevelArry[0];
         alert("Battery Level is "+batteryLevelArry[0]+"%");
       },
@@ -395,6 +399,7 @@ getBLEStatus(){
 
     )
   }
+  
   clearResult(){
     this.sendList = [];
     this.receiveList = [];
