@@ -10,7 +10,7 @@ To Do:
 
 
 import { Component, NgZone } from '@angular/core';
-import { NavController,AlertController } from 'ionic-angular';
+import { NavController,AlertController,Platform } from 'ionic-angular';
 import {BLE} from 'ionic-native';
 import { HornbillServicesPage } from '../hornbill-services/hornbill-services';
 import { TransferPage } from '../transfer/transfer';
@@ -24,7 +24,7 @@ export class HomePage {
   //devices:{name:string,deviceID:string,rssi:string}[];
   devices = [];
 
-  constructor(public navCtrl: NavController, public alertCtrl: AlertController,private zone: NgZone) {
+  constructor(public navCtrl: NavController, public alertCtrl: AlertController,public plt: Platform, private zone: NgZone) {
   this.devices = [];
 
   this.checkBluetooth();
@@ -33,28 +33,47 @@ export class HomePage {
 
   //check if bluetooth is enabled on the device.
   checkBluetooth(){
+    
+    if (this.plt.is('android')) {
     BLE.isEnabled().then(
       ()=>{
           console.log("Bluetooth is enabled on device");
           this.startScanning(undefined);
       },
       (reason)=>{
-          alert("Blue not enabled "+reason);
+          console.log("Blue not enabled "+reason);
           console.log("show message to user");
           this.showConfirm();
       }
     );
+  } else {
+    this.startScanning(undefined);
+  }
   }
 
   showConfirm() {
       let confirm = this.alertCtrl.create({
       title: 'Turn ON Bluetooth',
-      message: 'Looks like phone bluetooth is disabled, enable it and retry!',
+      message: 'Looks like phone bluetooth is disabled, Press Okay to enable it!',
       buttons: [
       {
         text: 'Okay',
         handler: () => {
+          BLE.enable().then(
+            (value) => {
+              this.startScanning(undefined);
+            },
+            (reason) => {
+              alert("Failed to enable bluetooth "+reason);
+            }
+          );
           console.log('Okay');
+        }
+      },
+      {
+        text: 'Cancel',
+        handler: () => {
+          this.plt.exitApp();
         }
       }]
       });
@@ -72,7 +91,11 @@ export class HomePage {
         this.devices.push(device)
       });
         //this.stopScanning();
-    });
+    },
+    (error)=>{
+      alert("BLE Scan failed "+error)
+    }
+    );
     if(refresher != undefined)
           refresher.complete();
   }
