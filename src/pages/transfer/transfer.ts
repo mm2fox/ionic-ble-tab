@@ -66,20 +66,18 @@ export class TransferPage implements OnInit {
 timestamp() {
     let currenttime = new Date();
     return [currenttime.toString().split(" ")[4]+"."+currenttime.getMilliseconds(),currenttime.getTime()];
-    }
+  }
+  
   sendRaw(cli){
     //alert("send raw data: "+cli);
     BLE.write(this.deviceId, this.transferService, this.transferCha, this.stringToBytes(this.hexCharCodeToStr(cli))).then(
-      ()=>{
-        //alert("write trans ok");
+      (value)=>{
+        //alert("write trans ok "+cli+' value: '+value);
+        console.log("write trans ok "+cli);
         
-        this.zone.run(() => { //running inside the zone because otherwise the view is not updated
-          this.sendList.reverse().push(this.timestamp()[0]+' : '+this.strToHexCharCode(this.hexCharCodeToStr(cli)));
-          this.sendList.reverse()
-      });
       },
-      ()=>{
-        alert("write trans error");
+      (reason)=>{
+        alert("write trans error"+reason);
         console.log("Error");
       }
     );
@@ -101,15 +99,34 @@ timestamp() {
     startPacket = '00' + this.numToHex(totalNumber,true) +this.packetTypeEncode[type]+this.itemTypeEncode[item];
     endPacket = '020000';
   }
+//alert("start packet is "+startPacket);
+  console.log("send start packet "+startPacket);
   this.sendRaw(startPacket);
+  this.zone.run(() => { //running inside the zone because otherwise the view is not updated
+          this.sendList.reverse().push(this.timestamp()[0]+' : '+this.strToHexCharCode(this.hexCharCodeToStr(startPacket)));
+          this.sendList.reverse();
+          console.log("sendList is "+this.sendList);
+      });
   if (type != 'get') {
   for (let i = 0, l = dataNumber; i < l; i++) {
     //alert("ready to send data"+dataNumber);
     let dataPacket = '01' + this.numToHex(i,true)+this.strToHexCharCode(str.substr(i*this.payloadlen,(i+1)*this.payloadlen));
     //alert("data packet is "+dataPacket);
+    console.log("send data packet "+dataPacket);
     this.sendRaw(dataPacket);
+    this.zone.run(() => { //running inside the zone because otherwise the view is not updated
+          this.sendList.reverse().push(this.timestamp()[0]+' : '+this.strToHexCharCode(this.hexCharCodeToStr(dataPacket)));
+          this.sendList.reverse();
+          console.log("sendList is "+this.sendList);
+      });
   }
-  }
+}
+console.log("send end packet "+endPacket);
+this.zone.run(() => { //running inside the zone because otherwise the view is not updated
+          this.sendList.reverse().push(this.timestamp()[0]+' : '+this.strToHexCharCode(this.hexCharCodeToStr(endPacket)));
+          this.sendList.reverse();
+          console.log("sendList is "+this.sendList);
+      });
   this.sendRaw(endPacket);
 
   }

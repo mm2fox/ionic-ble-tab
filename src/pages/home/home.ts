@@ -27,14 +27,17 @@ export class HomePage {
   constructor(public navCtrl: NavController, public alertCtrl: AlertController,public plt: Platform, private zone: NgZone) {
   this.devices = [];
 
-  this.checkBluetooth();
+  this.plt.ready().then(
+  () =>{
+    this.checkBluetooth();
+      });
 
   }
 
   //check if bluetooth is enabled on the device.
   checkBluetooth(){
     
-    if (this.plt.is('android')) {
+    //if (this.plt.is('android')) {
     BLE.isEnabled().then(
       ()=>{
           console.log("Bluetooth is enabled on device");
@@ -46,9 +49,9 @@ export class HomePage {
           this.showConfirm();
       }
     );
-  } else {
-    this.startScanning(undefined);
-  }
+  //} else {
+  //  this.startScanning(undefined);
+  //}
   }
 
   showConfirm() {
@@ -93,7 +96,10 @@ export class HomePage {
         //this.stopScanning();
     },
     (error)=>{
-      alert("BLE Scan failed "+error)
+      //if (error != 'plugin_not_installed') {
+        alert("BLE Scan failed "+error)
+      //}
+      
     }
     );
     if(refresher != undefined)
