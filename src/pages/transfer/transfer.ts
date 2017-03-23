@@ -371,6 +371,12 @@ getBLEStatus(){
           this.deviceRSSI = value.rssi;
           });
           this.BLEConnected = true;
+          if (value.services.indexof(this.battService) == -1 && value.services.indexof(this.battService.toUpperCase())==-1){
+            alert("Battery service "+this.battService+" not on this device")
+          }
+          if (value.services.indexof(this.transferService) == -1 && value.services.indexof(this.transferService.toUpperCase())==-1){
+            alert("Transfer service "+this.transferService+" not on this device")
+          }
         },
         (error) => {
           alert("Connect BLE failed "+JSON.stringify(error));
