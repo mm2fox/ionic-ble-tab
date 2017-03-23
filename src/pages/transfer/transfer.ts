@@ -16,9 +16,12 @@ import {BLE} from 'ionic-native';
 export class TransferPage implements OnInit {
   packetTypeEncode = {set:'00',get:'01',cli:'02',response:'03',response_cli:'04',cli_length:'05',response_cli_length:'06'};
   itemTypeEncode = {DHCP:'00',IP:'01',GATEWAY:'02',TARGETIP:'03',SOCKSTATUS:'04',BLENAME:'05'};
-  packetTypeDecode = {'00':'set','01':'get','02':'cli','03':'response','04':'response_cli','05':'cli_length','06':'response_cli_length'};
-  itemTypeDecode = {'00':'DHCP','01':'IP','02':'GATEWAY','03':'TARGETIP','04':'SOCKSTATUS','06':'BLENAME'};
+  packetTypeDecode = {'0':'set','1':'get','2':'cli','3':'response','4':'response_cli','5':'cli_length','6':'response_cli_length'};
+  itemTypeDecode = {'0':'DHCP','1':'IP','2':'GATEWAY','3':'TARGETIP','4':'SOCKSTATUS','6':'BLENAME'};
   ip;
+  targetip;
+  socketstatus;
+
   transferService = 'fff0';
   transferCha = "fff6";
   battService = '180f';
@@ -34,9 +37,15 @@ export class TransferPage implements OnInit {
   deviceName;
   deviceRSSI;
   result = '';
+  cmdresult;
+  clioutput;
   batteryLevel;
-  recordButton = 'Start Record';
+
   
+
+
+
+  recordButton = 'Start Record';
   pagingButton = 'Disable Paging';
   notifyTransCharButton = 'Start Notify';
   notifyBatteryButton = 'Start Notify Battery Level';
@@ -229,6 +238,87 @@ this.zone.run(() => { //running inside the zone because otherwise the view is no
       this.stopNotifyBatteryLevel()
     }
   }
+  decode(data){
+    let datapayload = '';
+    let decoderesult = [];
+    let i = 0; //data packet number
+    let hex = this.strToHexCharCode(this.bytesToString(data));
+    if (hex.startsWith('00')) {
+      datapayload = ''
+      decoderesult = this.decodeStart(hex)
+    }
+    if (hex.startsWith('01')) {
+      datapayload = datapayload + this.decodeData(hex,i)
+      if (decoderesult.length==0) {
+        alert("Data packet receive before Start packet")
+      }
+      let packetnumber = decoderesult[0];
+      let packettype = decoderesult[1];
+      let item = decoderesult[2]
+      if (packettype == 'response_cli') {
+        this.clioutput = this.clioutput + this.hexCharCodeToStr(datapayload)
+      } else {
+        switch (item) {
+          case 'IP':
+            this.ip = this.decodeIP(datapayload);
+            break;
+          case 'TARGETIP':
+            this.targetip = this.decodeTargetIP(datapayload);
+            break;
+          case 'SOCKSTATUS':
+            this.socketstatus = this.decodeSocketStatus(datapayload);
+            break;
+        }
+      }
+      
+
+
+    }
+    if (hex.startsWith('02')) {
+      i = 0;
+      let datalength = this.decodeEnd(data);
+      if (datalength != datapayload.length.toString()) {
+        alert("Data packet length incorrect")
+      }
+    }
+
+  }
+  decodeStart(data){
+    let packetType = this.packetTypeDecode[this.hexToNum(data.substr(6,2))];
+    let item = this.itemTypeDecode[this.hexToNum(data.substr(8,2))];
+    let packetnumber = this.hexToNum(data.substr(2,4));
+    return [packetnumber,packetType,item];
+
+  }
+  decodeData(data,i:number){
+    let packetnum = this.hexToNum(data.substr(2,4));
+    if (packetnum != i.toString()) {
+      alert("Data packet number incorrect")
+    } 
+    return data.substr(6,this.payloadlen)
+  }
+  decodeIP(data){
+    let ip = this.hexToIP(data.substr(0,4));
+    let mask = this.hexToIP(data.substr(5,4));
+    return ip+"/"+mask;
+  }
+  decodeTargetIP(data){
+    let ip = this.hexToIP(data.substr(0,4));
+    let port = this.hexToNum(data.substr(5,4));
+    return ip+"/"+port;
+  }
+  decodeSocketStatus(data){
+    let socketstatus = this.hexToIP(data.substr(0,2));
+    if (socketstatus == '1') {
+      return "socket is up"
+    }
+    if (socketstatus == '0') {
+      return "socket is down"
+    }
+  }
+  decodeEnd(data){
+    return this.hexToNum(data.substr(2,4));
+  }
   discoverServices(){
     console.log("trying to connect");
     BLE.connect(this.deviceId).subscribe(peripheralData => {
@@ -260,6 +350,7 @@ this.zone.run(() => { //running inside the zone because otherwise the view is no
         //this.notifyBatteryButton = 'Stop Notify';
         let timestamp = this.timestamp();
         let datalength = this.bytesToString(data).length;
+        this.decode(data);
         this.zone.run(() => {
         this.notifyTransTimestamp = timestamp[0];
         });
@@ -484,6 +575,19 @@ getBLEStatus(){
     } else{
       return hexnumber;
     }
+  }
+  hexToNum(hex:string){
+    if (!hex.startsWith('0x')){
+      hex='0x'+hex;
+    }
+    return Number(hex).toString();
+  }
+  hexToIP(hex:string){
+    let ip = [];
+    for (let i = 0, l = hex.length; i < l; i=i+2) {
+        ip.push(this.hexToNum(hex.substr(i,2)))
+    }
+    return ip.join(".")
   }
   hexToBytes(str){
     return this.stringToBytes(this.hexCharCodeToStr(str))

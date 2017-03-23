@@ -26,7 +26,7 @@
   <button ion-button small (click)="notifyTrans()">{{notifyTransCharButton}}</button>
   <button ion-button small (click)="notifyBattery()">{{notifyBatteryButton}}</button>
     <ion-list-header>
-    Socket
+    Socket {{socketstatus}}
   </ion-list-header>
 
   <button ion-button small (click)="connectSocket()">Socket Connect</button>
@@ -41,7 +41,7 @@
   <button ion-button small (click)="sendCMD('admin\n')">Send admin</button>
   <button ion-button small (click)="sendCMD('y\n')">Send y</button>
 <ion-list-header>
-    BLE Function Test
+    BLE Function Test  {{ip}} {{targetip}}
   </ion-list-header>
   <button ion-button small (click)="getIP()">Get IP address</button>
   <button ion-button small (click)="getTargetIP()">Get Target IP address</button>
@@ -68,7 +68,7 @@
 
 
   <ion-list-header>
-    Result Last Notify on {{notifyTransTimestamp}}
+    Result Last Notify on {{notifyTransTimestamp}} {{cmdresult}}
   </ion-list-header>
   <ion-label>{{result}}</ion-label>
 
