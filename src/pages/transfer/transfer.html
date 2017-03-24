@@ -41,7 +41,7 @@
   <button ion-button small (click)="sendCMD('admin\n')">Send admin</button>
   <button ion-button small (click)="sendCMD('y\n')">Send y</button>
 <ion-list-header>
-    BLE Function Test  {{ip}} {{targetip}}
+    BLE IP is {{ip}} Target IP is {{targetip}}
   </ion-list-header>
   <button ion-button small (click)="getIP()">Get IP address</button>
   <button ion-button small (click)="getTargetIP()">Get Target IP address</button>
@@ -76,6 +76,9 @@
 
   <button ion-button small (click)="startRecord()">{{recordButton}}</button>
   <button ion-button small (click)="clearResult()">Clear Result</button>
+  <button ion-button small (click)="cliOutput()">{{cliOutputButton}}</button>
+  <ion-label *ngIf ="showCLIoutput">{{clioutput}}</ion-label>
+
 
   
 

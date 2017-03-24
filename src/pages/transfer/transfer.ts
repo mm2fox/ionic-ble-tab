@@ -2,6 +2,7 @@ import { Component, NgZone, OnInit } from '@angular/core';
 import { NavController, NavParams } from 'ionic-angular';
 import {BLE} from 'ionic-native';
 
+
 /*
   Generated class for the Robo page.
 
@@ -41,6 +42,10 @@ export class TransferPage implements OnInit {
   clioutput;
   batteryLevel;
 
+  datapayload = '';
+  decoderesult = [];
+  datanumber = 0;
+
   
 
 
@@ -50,6 +55,8 @@ export class TransferPage implements OnInit {
   notifyTransCharButton = 'Start Notify';
   notifyBatteryButton = 'Start Notify Battery Level';
   connectBLEButton = 'ConnectBLE';
+  cliOutputButton = 'Show CLI';
+  showCLIoutput = false;
   BLEConnected = true;
   notifyTransTimestamp;
   recordStarted = false;
@@ -239,34 +246,34 @@ this.zone.run(() => { //running inside the zone because otherwise the view is no
     }
   }
   decode(data){
-    let datapayload = '';
-    let decoderesult = [];
-    let i = 0; //data packet number
     let hex = this.strToHexCharCode(this.bytesToString(data));
+    console.log("decode"+hex);
     if (hex.startsWith('00')) {
-      datapayload = ''
-      decoderesult = this.decodeStart(hex)
+      this.datapayload = ''
+      this.decoderesult = this.decodeStart(hex)
     }
     if (hex.startsWith('01')) {
-      datapayload = datapayload + this.decodeData(hex,i)
-      if (decoderesult.length==0) {
-        alert("Data packet receive before Start packet")
+      this.datapayload = this.datapayload + this.decodeData(hex,this.datanumber)
+
+      if (this.decoderesult.length==0) {
+        console.error("Data packet receive before Start packet")
       }
-      let packetnumber = decoderesult[0];
-      let packettype = decoderesult[1];
-      let item = decoderesult[2]
+      let packetnumber = this.decoderesult[0];
+      let packettype = this.decoderesult[1];
+      let item = this.decoderesult[2]
       if (packettype == 'response_cli') {
-        this.clioutput = this.clioutput + this.hexCharCodeToStr(datapayload)
+        console.log("Data is"+this.hexCharCodeToStr(this.datapayload))
+        //this.clioutput = this.clioutput + this.hexCharCodeToStr(this.datapayload)
       } else {
         switch (item) {
           case 'IP':
-            this.ip = this.decodeIP(datapayload);
+            this.ip = this.decodeIP(this.datapayload);
             break;
           case 'TARGETIP':
-            this.targetip = this.decodeTargetIP(datapayload);
+            this.targetip = this.decodeTargetIP(this.datapayload);
             break;
           case 'SOCKSTATUS':
-            this.socketstatus = this.decodeSocketStatus(datapayload);
+            this.socketstatus = this.decodeSocketStatus(this.datapayload);
             break;
         }
       }
@@ -275,13 +282,13 @@ this.zone.run(() => { //running inside the zone because otherwise the view is no
 
     }
     if (hex.startsWith('02')) {
-      i = 0;
-      let datalength = this.decodeEnd(data);
-      if (datalength != datapayload.length.toString()) {
-        alert("Data packet length incorrect")
+      this.datanumber = 0;
+      let datalength = this.decodeEnd(hex);
+      if (datalength != (this.datapayload.length/2).toString()) {
+        console.error("Data packet length incorrect")
       }
+    
     }
-
   }
   decodeStart(data){
     let packetType = this.packetTypeDecode[this.hexToNum(data.substr(6,2))];
@@ -293,27 +300,27 @@ this.zone.run(() => { //running inside the zone because otherwise the view is no
   decodeData(data,i:number){
     let packetnum = this.hexToNum(data.substr(2,4));
     if (packetnum != i.toString()) {
-      alert("Data packet number incorrect")
+      console.error("Data packet number incorrect")
     } 
     return data.substr(6,this.payloadlen)
   }
   decodeIP(data){
-    let ip = this.hexToIP(data.substr(0,4));
-    let mask = this.hexToIP(data.substr(5,4));
+    let ip = this.hexToIP(data.substr(0,8));
+    let mask = this.hexToIP(data.substr(8,8));
     return ip+"/"+mask;
   }
   decodeTargetIP(data){
-    let ip = this.hexToIP(data.substr(0,4));
-    let port = this.hexToNum(data.substr(5,4));
+    let ip = this.hexToIP(data.substr(0,8));
+    let port = this.hexToNum(data.substr(8,4));
     return ip+"/"+port;
   }
   decodeSocketStatus(data){
     let socketstatus = this.hexToIP(data.substr(0,2));
     if (socketstatus == '1') {
-      return "socket is up"
+      return "up"
     }
     if (socketstatus == '0') {
-      return "socket is down"
+      return "down"
     }
   }
   decodeEnd(data){
@@ -328,7 +335,17 @@ this.zone.run(() => { //running inside the zone because otherwise the view is no
           ()=>{
             this.connectBLEButton = 'DisconnectBLE';
           });
-        
+          console.log(peripheralData.services);
+          console.log(JSON.stringify(peripheralData.services));
+          let services = [];
+          services = new Array(peripheralData.services);
+          console.log("services: "+services);
+          if (services.indexOf(this.battService) == -1 && services.indexOf(this.battService.toUpperCase())==-1){
+            console.error("Battery service "+this.battService+" not on this device")
+          }
+        if (services.indexOf(this.transferService) == -1 && services.indexOf(this.transferService.toUpperCase())==-1){
+            console.error("Transfer service "+this.transferService+" not on this device")
+         }
         this.startNotifyTrans();
         this.startNotifyBatteryLevel();
       },
@@ -462,12 +479,7 @@ getBLEStatus(){
           this.deviceRSSI = value.rssi;
           });
           this.BLEConnected = true;
-          if (value.services.indexof(this.battService) == -1 && value.services.indexof(this.battService.toUpperCase())==-1){
-            alert("Battery service "+this.battService+" not on this device")
-          }
-          if (value.services.indexof(this.transferService) == -1 && value.services.indexof(this.transferService.toUpperCase())==-1){
-            alert("Transfer service "+this.transferService+" not on this device")
-          }
+          
         },
         (error) => {
           alert("Connect BLE failed "+JSON.stringify(error));
@@ -551,8 +563,15 @@ getBLEStatus(){
        this.pagingButton = 'Enable Paging';
        this.sendCMD('paging status disabled\n');
      }
-
-    
+  }
+  cliOutput(){
+    if (this.cliOutputButton == 'Show CLI'){
+      this.cliOutputButton = 'Hide CLI';
+      this.showCLIoutput = true;
+     } else {
+       this.cliOutputButton = 'Show CLI';
+      this.showCLIoutput = false;
+     }
   }
 
   ipToHex(ip){
@@ -634,7 +653,7 @@ hexCharCodeToStr(hexCharCodeStr) {
       trimedStr;
     let len = rawStr.length;
     if(len % 2 !== 0) {
-     alert("Illegal Format ASCII Code!");
+     console.error("Illegal Format ASCII Code!");
         return "";
     }
     let curCharCode;
