@@ -39,6 +39,7 @@ export class TransferPage implements OnInit {
   deviceName;
   deviceRSSI;
   result = '';
+  transmitresult = '';
   cmdresult;
   clioutput;
   clioutputraw = '';
@@ -102,7 +103,8 @@ timestamp() {
       },
       (reason)=>{
         alert("write trans error"+reason);
-        console.log("Error");
+        this.transmitresult = 'Error: BLE write trans error '+reason;
+        console.error('Error: BLE write trans error '+reason);
       }
     );
   }
@@ -263,7 +265,8 @@ this.zone.run(() => { //running inside the zone because otherwise the view is no
       this.datanumber++;
 
       if (this.decoderesult.length==0) {
-        console.error("Data packet receive before Start packet")
+        this.transmitresult = 'Error: Data packet receive before Start packet';
+        console.error("Data packet receive before Start packet");
       }
       packetnumber = this.decoderesult[0];
       packettype = this.decoderesult[1];
@@ -294,7 +297,8 @@ this.zone.run(() => { //running inside the zone because otherwise the view is no
       this.decoderesult = [];
       let datalength = this.decodeEnd(hex);
       if (datalength != (this.datapayload.length/2).toString()) {
-        console.error("Data packet length incorrect, end packete: "+datalength+" actual: "+(this.datapayload.length/2).toString())
+        this.transmitresult = "Error:Data packet length incorrect, end packete: "+datalength+" actual: "+(this.datapayload.length/2).toString();
+        console.error("Data packet length incorrect, end packete: "+datalength+" actual: "+(this.datapayload.length/2).toString());
       }
       if (packettype == 'response_cli') {
         console.log("Raw Data is"+this.datapayload);
@@ -317,7 +321,8 @@ this.zone.run(() => { //running inside the zone because otherwise the view is no
   decodeData(data,i:number){
     let packetnum = this.hexToNum(data.substr(2,4));
     if (packetnum != i.toString()) {
-      console.error("Data packet number incorrect, actual: "+packetnum+" expect: "+i.toString())
+      this.transmitresult = "Error:Data packet number incorrect, actual: "+packetnum+" expect: "+i.toString();
+      console.error("Data packet number incorrect, actual: "+packetnum+" expect: "+i.toString());
     } 
     return data.substring(6)
   }
@@ -416,7 +421,8 @@ this.zone.run(() => { //running inside the zone because otherwise the view is no
       ()=>{
         alert("start notify trans error");
         this.notifyTransCharButton = 'Start Notify';
-        console.log("Error");
+        this.transmitresult = "Error: start notify trans error";
+        console.log("Error: start notify trans error");
       }
     );
   }
@@ -561,11 +567,14 @@ getBLEStatus(){
     this.receiveList = [];
     this.result = '';
     this.clioutputraw = '';
+    this.clioutput = [];
     this.ip = '';
     this.targetip = '';
     this.batteryLevel = '';
     this.socketstatus = '';
     this.cmdresult = '';
+    this.notifyTransTimestamp = '';
+    this.transmitresult = '';
   }
   startRecord(){
     if (this.recordStarted){
