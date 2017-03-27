@@ -18,7 +18,8 @@ export class TransferPage implements OnInit {
   packetTypeEncode = {set:'00',get:'01',cli:'02',response:'03',response_cli:'04',cli_length:'05',response_cli_length:'06'};
   itemTypeEncode = {DHCP:'00',IP:'01',GATEWAY:'02',TARGETIP:'03',SOCKSTATUS:'04',BLENAME:'05'};
   packetTypeDecode = {'0':'set','1':'get','2':'cli','3':'response','4':'response_cli','5':'cli_length','6':'response_cli_length'};
-  itemTypeDecode = {'0':'DHCP','1':'IP','2':'GATEWAY','3':'TARGETIP','4':'SOCKSTATUS','6':'BLENAME'};
+  itemTypeDecode = {'0':'DHCP','1':'IP','2':'GATEWAY','3':'TARGETIP','4':'SOCKSTATUS','6':'BLENAME','7':'CMDRESTULT'};
+  
   ip;
   targetip;
   socketstatus;
@@ -40,6 +41,7 @@ export class TransferPage implements OnInit {
   result = '';
   cmdresult;
   clioutput;
+  clioutputraw = '';
   batteryLevel;
 
   datapayload = '';
@@ -246,25 +248,28 @@ this.zone.run(() => { //running inside the zone because otherwise the view is no
     }
   }
   decode(data){
-    let hex = this.strToHexCharCode(this.bytesToString(data));
+    let hex = this.bytesToHex(data);
     console.log("decode"+hex);
+    let packetnumber = this.decoderesult[0];
+    let packettype = this.decoderesult[1];
+    let item = this.decoderesult[2];
     if (hex.startsWith('00')) {
-      this.datapayload = ''
-      this.decoderesult = this.decodeStart(hex)
+      this.datapayload = '';
+      this.decoderesult = this.decodeStart(hex);
     }
     if (hex.startsWith('01')) {
-      this.datapayload = this.datapayload + this.decodeData(hex,this.datanumber)
+      
+      this.datapayload = this.datapayload + this.decodeData(hex,this.datanumber);
+      this.datanumber++;
 
       if (this.decoderesult.length==0) {
         console.error("Data packet receive before Start packet")
       }
-      let packetnumber = this.decoderesult[0];
-      let packettype = this.decoderesult[1];
-      let item = this.decoderesult[2]
-      if (packettype == 'response_cli') {
-        console.log("Data is"+this.hexCharCodeToStr(this.datapayload))
-        //this.clioutput = this.clioutput + this.hexCharCodeToStr(this.datapayload)
-      } else {
+      packetnumber = this.decoderesult[0];
+      packettype = this.decoderesult[1];
+      item = this.decoderesult[2];
+      if (packettype != 'response_cli') {
+        
         switch (item) {
           case 'IP':
             this.ip = this.decodeIP(this.datapayload);
@@ -275,6 +280,9 @@ this.zone.run(() => { //running inside the zone because otherwise the view is no
           case 'SOCKSTATUS':
             this.socketstatus = this.decodeSocketStatus(this.datapayload);
             break;
+          case 'CMDRESTULT':
+            this.cmdresult = this.decodeSetStatus(this.datapayload);
+            break;
         }
       }
       
@@ -283,10 +291,19 @@ this.zone.run(() => { //running inside the zone because otherwise the view is no
     }
     if (hex.startsWith('02')) {
       this.datanumber = 0;
+      this.decoderesult = [];
       let datalength = this.decodeEnd(hex);
       if (datalength != (this.datapayload.length/2).toString()) {
-        console.error("Data packet length incorrect")
+        console.error("Data packet length incorrect, end packete: "+datalength+" actual: "+(this.datapayload.length/2).toString())
       }
+      if (packettype == 'response_cli') {
+        console.log("Raw Data is"+this.datapayload);
+        if (!this.datapayload.startsWith('ff')) {
+        this.clioutputraw = this.clioutputraw + this.hexCharCodeToStr(this.datapayload);
+        this.clioutput = this.clioutputraw.split("\n");
+        }
+      }
+      this.datapayload = '';
     
     }
   }
@@ -300,9 +317,9 @@ this.zone.run(() => { //running inside the zone because otherwise the view is no
   decodeData(data,i:number){
     let packetnum = this.hexToNum(data.substr(2,4));
     if (packetnum != i.toString()) {
-      console.error("Data packet number incorrect")
+      console.error("Data packet number incorrect, actual: "+packetnum+" expect: "+i.toString())
     } 
-    return data.substr(6,this.payloadlen)
+    return data.substring(6)
   }
   decodeIP(data){
     let ip = this.hexToIP(data.substr(0,8));
@@ -323,6 +340,15 @@ this.zone.run(() => { //running inside the zone because otherwise the view is no
       return "down"
     }
   }
+  decodeSetStatus(data){
+    let socketstatus = this.hexToIP(data.substr(0,2));
+    if (socketstatus == '1') {
+      return "ok"
+    }
+    if (socketstatus == '0') {
+      return "fail"
+    }
+  }
   decodeEnd(data){
     return this.hexToNum(data.substr(2,4));
   }
@@ -335,16 +361,14 @@ this.zone.run(() => { //running inside the zone because otherwise the view is no
           ()=>{
             this.connectBLEButton = 'DisconnectBLE';
           });
-          console.log(peripheralData.services);
-          console.log(JSON.stringify(peripheralData.services));
-          let services = [];
-          services = new Array(peripheralData.services);
-          console.log("services: "+services);
+          let services = peripheralData.services;
           if (services.indexOf(this.battService) == -1 && services.indexOf(this.battService.toUpperCase())==-1){
-            console.error("Battery service "+this.battService+" not on this device")
+            alert("Battery service "+this.battService+" not on this device " + services);
+            console.error("Battery service "+this.battService+" not on this device " + services);
           }
         if (services.indexOf(this.transferService) == -1 && services.indexOf(this.transferService.toUpperCase())==-1){
-            console.error("Transfer service "+this.transferService+" not on this device")
+            alert("Transfer service "+this.transferService+" not on this device " + services);
+            console.error("Transfer service "+this.transferService+" not on this device " + services);
          }
         this.startNotifyTrans();
         this.startNotifyBatteryLevel();
@@ -536,6 +560,12 @@ getBLEStatus(){
     this.sendList = [];
     this.receiveList = [];
     this.result = '';
+    this.clioutputraw = '';
+    this.ip = '';
+    this.targetip = '';
+    this.batteryLevel = '';
+    this.socketstatus = '';
+    this.cmdresult = '';
   }
   startRecord(){
     if (this.recordStarted){
@@ -653,7 +683,7 @@ hexCharCodeToStr(hexCharCodeStr) {
       trimedStr;
     let len = rawStr.length;
     if(len % 2 !== 0) {
-     console.error("Illegal Format ASCII Code!");
+     console.error("Illegal Format ASCII Code! " + hexCharCodeStr);
         return "";
     }
     let curCharCode;

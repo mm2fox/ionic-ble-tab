@@ -46,7 +46,7 @@
   <button ion-button small (click)="getIP()">Get IP address</button>
   <button ion-button small (click)="getTargetIP()">Get Target IP address</button>
   <button ion-button small (click)="readBatteryLevel()">Read Battery Level</button>
-  <ion-label color="primary">Configuration</ion-label>
+  <ion-label color="primary">Configuration {{cmdresult}}</ion-label>
   <button ion-button small (click)="changeBLEName()">Change BLE Name</button>
   <button ion-button small (click)="changeIP()">Change IP address</button>
   <button ion-button small (click)="changeTargetIP()">Change Target IP address</button>
@@ -77,13 +77,11 @@
   <button ion-button small (click)="startRecord()">{{recordButton}}</button>
   <button ion-button small (click)="clearResult()">Clear Result</button>
   <button ion-button small (click)="cliOutput()">{{cliOutputButton}}</button>
-  <ion-label *ngIf ="showCLIoutput">{{clioutput}}</ion-label>
-
-
-  
-
-
-
+  <ion-list *ngIf ="showCLIoutput">
+  <ion-label *ngFor ="let clioutputline of clioutput">
+    {{clioutputline}}
+  </ion-label>
+  </ion-list>
   
     <ion-item-divider color="light">Received</ion-item-divider>
   <ion-item *ngFor ="let receive of receiveList">
