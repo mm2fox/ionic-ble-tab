@@ -28,7 +28,7 @@ export class TransferPage implements OnInit {
   transferCha = "fff6";
   battService = '180f';
   battLevelCha = '2a19';
-  payloadlen = 17;
+  payloadlen = 16;
   telnetPacket = 'fffc18fffc20fffc23fffc27fffc01fffc1ffffe05fffc21';
   cli;
   cliList = [];
@@ -65,7 +65,8 @@ export class TransferPage implements OnInit {
   recordStarted = false;
   lastrecordStatus = false;
   recordPacketesNum;
-  recordPacketesLength;
+  recordPacketesLength = 0;
+  recordPayloadLength = 0;
   lastReceiveTime;
   firstReceiveTime;
 
@@ -86,6 +87,24 @@ export class TransferPage implements OnInit {
     if (this.BLEConnected) {
       this.connectBLE()
     }
+
+  }
+  changePayloadLength(){
+    let payloadlength = this.cli;
+    if (payloadlength == undefined || payloadlength == ''){
+      if (this.payloadlen>16) {
+        this.payloadlen--;
+      } else if (this.payloadlen<15) {
+        this.payloadlen++;
+      } else {
+        this.payloadlen++;
+      }
+    } else {
+      if (Number(payloadlength)) {
+        this.payloadlen = Number(payloadlength)
+      }
+    }
+
 
   }
 timestamp() {
@@ -305,6 +324,11 @@ this.zone.run(() => { //running inside the zone because otherwise the view is no
         if (!this.datapayload.startsWith('ff')) {
         this.clioutputraw = this.clioutputraw + this.hexCharCodeToStr(this.datapayload);
         this.clioutput = this.clioutputraw.split("\n");
+        if (this.recordStarted) {
+          this.recordPayloadLength = this.recordPayloadLength + Number(datalength)
+        } else {
+          this.recordPayloadLength = 0
+        }
         }
       }
       this.datapayload = '';
@@ -410,12 +434,15 @@ this.zone.run(() => { //running inside the zone because otherwise the view is no
               this.firstReceiveTime = timestamp[1];
             }
           } else {
+            this.lastReceiveTime = timestamp[1];
+            this.firstReceiveTime = timestamp[1];
             this.zone.run(() => { //running inside the zone because otherwise the view is not updated
           this.receiveList.reverse().push(timestamp[0]+' : '+this.strToHexCharCode(this.bytesToString(data)));
           this.receiveList.reverse();
         });
           }
-          this.lastrecordStatus = this.recordStarted;
+
+        this.lastrecordStatus = this.recordStarted;
       
       },
       ()=>{
@@ -584,8 +611,10 @@ getBLEStatus(){
       let endtime = new Date(this.lastReceiveTime);
       let spendtime = (this.lastReceiveTime - this.firstReceiveTime)/1000;
       alert("start time: "+starttime.toString()+" last time: "+endtime.toString()+"Packets: "+this.recordPacketesNum);
-      this.result ="Used Time: " + spendtime + "s, Packets length: "+this.recordPacketesLength+" Speed:"+this.recordPacketesLength/spendtime+'byte/s';
-      
+      this.result ="Used Time: " + spendtime + "s, length: "+this.recordPacketesLength+",payloadlen: "+this.recordPayloadLength+"\r\n Speed:"+this.recordPacketesLength/spendtime+'byte/s, '+this.recordPayloadLength/spendtime+'byte/s';
+      this.firstReceiveTime;
+      this.lastReceiveTime;
+      this.lastrecordStatus = false;
     } else {
       this.recordButton = 'Stop Record';
       this.recordStarted = true;
@@ -593,6 +622,7 @@ getBLEStatus(){
     }
     this.recordPacketesNum = 0;
     this.recordPacketesLength = 0;
+    this.recordPayloadLength = 0;
   }
   sendCMDPageing(){
     if (this.pagingButton == 'Enable Paging'){

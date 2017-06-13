@@ -16,7 +16,7 @@
 <ion-content padding>
   <ion-list>
   <ion-list-header>
-    BLE Device {{deviceName}} ID {{deviceId}}
+    BLE Device {{deviceName}} ID {{deviceId}} Payload Length is {{payloadlen}}
   </ion-list-header>
   <ion-list-header>
     Connected is {{BLEConnected}},RSSI {{deviceRSSI}}, Battery is {{batteryLevel}}%
@@ -51,7 +51,7 @@
   <button ion-button small (click)="changeIP()">Change IP address</button>
   <button ion-button small (click)="changeTargetIP()">Change Target IP address</button>
   <button ion-button small (click)="changeTargetIP('172.16.0.1/23')">Reset Target IP</button>
-  
+  <button ion-button small (click)="changePayloadLength()">Change Payload Length</button>
   <ion-list-header>
     CLI
   </ion-list-header>
@@ -68,7 +68,7 @@
 
 
   <ion-list-header>
-    Result Last Notify on {{notifyTransTimestamp}}
+    Result Last Notify on {{notifyTransTimestamp}} \r\n {{firstReceiveTime}} {{lastReceiveTime}}
   </ion-list-header>
   <ion-label>{{result}}</ion-label>
   <ion-label>{{transmitresult}}</ion-label>
