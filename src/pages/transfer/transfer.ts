@@ -29,11 +29,13 @@ export class TransferPage implements OnInit {
   battService = '180f';
   battLevelCha = '2a19';
   payloadlen = 16;
+  requestLength = false;
   telnetPacket = 'fffc18fffc20fffc23fffc27fffc01fffc1ffffe05fffc21';
   cli;
   cliList = [];
   receiveList = [];
   sendList = [];
+  recordresult = [];
 
   deviceId;
   deviceName;
@@ -104,8 +106,13 @@ export class TransferPage implements OnInit {
         this.payloadlen = Number(payloadlength)
       }
     }
-
-
+  }
+  changeRequestLength(){
+    if (this.requestLength) {
+      this.requestLength = false
+    } else {
+      this.requestLength = true
+    }
   }
 timestamp() {
     let currenttime = new Date();
@@ -144,6 +151,9 @@ timestamp() {
     startPacket = '00' + this.numToHex(totalNumber,true) +this.packetTypeEncode[type]+this.itemTypeEncode[item];
     endPacket = '020000';
   }
+  if (type == 'cli'||type == 'cli_length') {
+    startPacket = '00' + this.numToHex(totalNumber,true) +this.packetTypeEncode[type];    
+  }
 //alert("start packet is "+startPacket);
   console.log("send start packet "+startPacket);
   this.sendRaw(startPacket);
@@ -180,10 +190,20 @@ this.zone.run(() => { //running inside the zone because otherwise the view is no
       cli = this.cli+"\n";
       //alert("send input cli command"+cli);
     }
-    this.sendPacket(cli,'cli');
+    if (this.requestLength) {
+      this.sendPacket(cli, 'cli_length');
+    } else {
+      this.sendPacket(cli,'cli');
+    }
+    
   }
   sendTelnet(){
-    this.sendPacket(this.telnetPacket,'cli',undefined,true);
+    if (this.requestLength) {
+      this.sendPacket(this.telnetPacket,'cli_length',undefined,true);
+    } else {
+      this.sendPacket(this.telnetPacket,'cli',undefined,true);
+    }
+    
   }
   connectSocket(){
     this.sendPacket('01','set','SOCKSTATUS',true);
@@ -592,6 +612,7 @@ getBLEStatus(){
   clearResult(){
     this.sendList = [];
     this.receiveList = [];
+    this.recordresult = [];
     this.result = '';
     this.clioutputraw = '';
     this.clioutput = [];
@@ -604,14 +625,17 @@ getBLEStatus(){
     this.transmitresult = '';
   }
   startRecord(){
+    
     if (this.recordStarted){
       this.recordButton = 'Start Record';
       this.recordStarted = false;
       let starttime = new Date(this.firstReceiveTime);
       let endtime = new Date(this.lastReceiveTime);
       let spendtime = (this.lastReceiveTime - this.firstReceiveTime)/1000;
-      alert("start time: "+starttime.toString()+" last time: "+endtime.toString()+"Packets: "+this.recordPacketesNum);
-      this.result ="Used Time: " + spendtime + "s, length: "+this.recordPacketesLength+",payloadlen: "+this.recordPayloadLength+"\r\n Speed:"+this.recordPacketesLength/spendtime+'byte/s, '+this.recordPayloadLength/spendtime+'byte/s';
+      //alert("start time: "+starttime.toString()+" last time: "+endtime.toString()+"Packets: "+this.recordPacketesNum);
+      let recordresult = '';
+      recordresult ="First Received Packet Time: "+starttime.toString()+",Last Received Packet Time: "+endtime.toString()+",Packets: "+this.recordPacketesNum+",Total Used Time: " + spendtime + "s,Total length: "+this.recordPacketesLength+",Total Payload length: "+this.recordPayloadLength+",Speed:"+this.recordPacketesLength/spendtime+'byte/s,Payload Speed:'+this.recordPayloadLength/spendtime+'byte/s';
+      this.recordresult=recordresult.split(',');
       this.firstReceiveTime;
       this.lastReceiveTime;
       this.lastrecordStatus = false;
@@ -619,6 +643,7 @@ getBLEStatus(){
       this.recordButton = 'Stop Record';
       this.recordStarted = true;
       this.result = "Click Stop Record to get result, raw list will not update during capture";
+      this.recordresult = []
     }
     this.recordPacketesNum = 0;
     this.recordPacketesLength = 0;

@@ -15,10 +15,10 @@
 
 <ion-content padding>
   <ion-list>
-  <ion-list-header>
-    BLE Device {{deviceName}} ID {{deviceId}} Payload Length is {{payloadlen}}
+  <ion-list-header text-wrap>
+    BLE Device {{deviceName}} ID {{deviceId}}, Payload Length is {{payloadlen}}, Request Length is {{requestLength}}
   </ion-list-header>
-  <ion-list-header>
+  <ion-list-header text-wrap>
     Connected is {{BLEConnected}},RSSI {{deviceRSSI}}, Battery is {{batteryLevel}}%
   </ion-list-header>
   <button ion-button small (click)="connectBLE()">{{connectBLEButton}}</button>
@@ -40,7 +40,7 @@
   <button ion-button small (click)="sendCMD('cli\n')">Send cli</button>
   <button ion-button small (click)="sendCMD('admin\n')">Send admin</button>
   <button ion-button small (click)="sendCMD('y\n')">Send y</button>
-<ion-list-header>
+<ion-list-header text-wrap>
     BLE IP is {{ip}} Target IP is {{targetip}}
   </ion-list-header>
   <button ion-button small (click)="getIP()">Get IP address</button>
@@ -52,6 +52,7 @@
   <button ion-button small (click)="changeTargetIP()">Change Target IP address</button>
   <button ion-button small (click)="changeTargetIP('172.16.0.1/23')">Reset Target IP</button>
   <button ion-button small (click)="changePayloadLength()">Change Payload Length</button>
+  <button ion-button small (click)="changeRequestLength()">Change Request Length</button>
   <ion-list-header>
     CLI
   </ion-list-header>
@@ -70,6 +71,9 @@
   <ion-list-header>
     Result Last Notify on {{notifyTransTimestamp}} \r\n {{firstReceiveTime}} {{lastReceiveTime}}
   </ion-list-header>
+  <ion-label *ngFor ="let recordresultline of recordresult">
+    {{recordresultline}}
+  </ion-label>
   <ion-label>{{result}}</ion-label>
   <ion-label>{{transmitresult}}</ion-label>
 
