@@ -82,6 +82,12 @@
   <button ion-button small (click)="startRecord()">{{recordButton}}</button>
   <button ion-button small (click)="clearResult()">Clear Result</button>
   <button ion-button small (click)="cliOutput()">{{cliOutputButton}}</button>
+  <button ion-button small (click)="batteryResult()">{{batteryResultButton}}</button>
+  <ion-list *ngIf ="showBatteryResult">
+  <ion-label *ngFor ="let batteryResultline of batteryResultList">
+    {{batteryResultline}}
+  </ion-label>
+  </ion-list>
   <ion-list *ngIf ="showCLIoutput">
   <ion-label *ngFor ="let clioutputline of clioutput">
     {{clioutputline}}

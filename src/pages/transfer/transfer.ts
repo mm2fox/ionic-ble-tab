@@ -46,6 +46,7 @@ export class TransferPage implements OnInit {
   clioutput;
   clioutputraw = '';
   batteryLevel;
+  batteryResultList = [];
 
   datapayload = '';
   decoderesult = [];
@@ -61,7 +62,9 @@ export class TransferPage implements OnInit {
   notifyBatteryButton = 'Start Notify Battery Level';
   connectBLEButton = 'ConnectBLE';
   cliOutputButton = 'Show CLI';
+  batteryResultButton = 'Show Battery Result';
   showCLIoutput = false;
+  showBatteryResult = false;
   BLEConnected = true;
   notifyTransTimestamp;
   recordStarted = false;
@@ -500,6 +503,7 @@ this.zone.run(() => { //running inside the zone because otherwise the view is no
         this.zone.run(() => {
         //this.result = "Battery Level is "+batteryLevelArry[0]+"%, update on "+this.timestamp()[0];
         this.batteryLevel = batteryLevelArry[0];
+        this.batteryResultList.reverse().push(this.timestamp()[0]+' : '+this.batteryLevel);
         });
       },
       ()=>{
@@ -667,7 +671,16 @@ getBLEStatus(){
       this.showCLIoutput = false;
      }
   }
-
+  batteryResult(){
+    if (this.batteryResultButton == 'Show Battery Result'){
+      this.batteryResultButton = 'Hide Battery Result';
+      this.showBatteryResult = true;
+     } else {
+       this.batteryResultButton = 'Show Battery Result';
+      this.showBatteryResult = false;
+     }
+  }
+  
   ipToHex(ip){
     let ipsegments = ip.split(".");
     let iphex = [];
